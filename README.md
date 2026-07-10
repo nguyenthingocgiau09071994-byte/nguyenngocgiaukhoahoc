@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-Private-red)](./LICENSE)
 
 **Live URL**: https://masterclass-vn.pages.dev  
-**GitHub**: https://github.com/nguyenngocgiau/nguyenngocgiau.com
+**GitHub**: https://github.com/nguyenthingocgiau09071994-byte/nguyenngocgiaukhoahoc
 
 ---
 
