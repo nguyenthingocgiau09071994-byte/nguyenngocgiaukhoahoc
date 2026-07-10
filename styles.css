@@ -12635,3 +12635,230 @@ body:not(.adminPage) .slideContent h1 em {
   color: #ffffff !important;
 }
 
+/* AI Chatbot Styles */
+.aiChatBtn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #106f7a, #063d43);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.aiChatBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+.aiTooltip {
+  position: absolute;
+  right: 70px;
+  background: white;
+  color: #063d43;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.aiChatBtn:hover .aiTooltip {
+  opacity: 1;
+}
+.aiChatPanel {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 340px;
+  height: 480px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.aiChatPanel.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.aiChatHeader {
+  background: linear-gradient(135deg, #106f7a, #063d43);
+  padding: 16px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.aiChatHeader b {
+  display: block;
+  font-size: 16px;
+}
+.aiChatHeader small {
+  opacity: 0.8;
+  font-size: 12px;
+}
+.aiChatHeader button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+.aiChatMessages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background: #f9fafa;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.aiMessage {
+  display: flex;
+  gap: 8px;
+  max-width: 85%;
+}
+.aiMessage.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+.aiAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #eef2f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.aiMessage.user .aiAvatar {
+  background: #e7b84f;
+  color: white;
+  font-weight: bold;
+}
+.aiText {
+  background: white;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border-top-left-radius: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  color: #1a1a1a;
+}
+.aiMessage.user .aiText {
+  background: #106f7a;
+  color: white;
+  border-radius: 12px;
+  border-top-right-radius: 4px;
+}
+.aiChatInput {
+  display: flex;
+  padding: 12px;
+  background: white;
+  border-top: 1px solid #eee;
+  gap: 8px;
+}
+.aiChatInput input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  outline: none;
+}
+.aiChatInput input:focus {
+  border-color: #106f7a;
+}
+.aiChatInput button {
+  background: #106f7a;
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Admin UI Tweaks --- */
+/* Sidebar Toggle */
+.adminSide { position: relative; transition: width 0.3s ease; }
+.adminSide.collapsed { width: 80px; }
+.adminSide.collapsed .brand b, 
+.adminSide.collapsed nav button, 
+.adminSide.collapsed > a {
+  font-size: 0; 
+  text-indent: -9999px;
+  padding-left: 0;
+  justify-content: center;
+  overflow: hidden;
+}
+.adminSide.collapsed .brand i { margin: 0 auto; }
+.adminPage:has(.adminSide.collapsed) .adminMain { margin-left: 80px; }
+.adminMain { transition: margin-left 0.3s ease; }
+
+#toggleAdminSide {
+  position: absolute;
+  right: -14px;
+  top: 32px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #106f7a;
+  color: white;
+  border: 2px solid white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease;
+}
+.adminSide.collapsed #toggleAdminSide { transform: rotate(180deg); right: -14px; }
+
+/* Fonts & Spacing Enhancements */
+.adminPage { font-size: 16px; line-height: 1.6; letter-spacing: 0.3px; }
+.adminPage header h1 { font-size: 34px !important; font-weight: 800; letter-spacing: -1px; margin-top: 4px; }
+.adminPage .adminTitle h2 { font-size: 26px !important; font-weight: 700; letter-spacing: -0.5px; }
+.adminPage nav button { font-size: 16px !important; padding: 14px 20px !important; margin-bottom: 6px; }
+
+/* Prominent Icons */
+.adminPage .statIcon, 
+.adminPage .metricIcon {
+  width: 64px !important;
+  height: 64px !important;
+  font-size: 28px !important;
+  border-radius: 16px !important;
+}
+.adminPage .adminStats article b { font-size: 28px !important; }
+.adminPage .adminStats article div,
+.adminPage .memberMetrics > span > div { gap: 4px; }
+.adminPage .memberMetrics b { font-size: 26px !important; }
+

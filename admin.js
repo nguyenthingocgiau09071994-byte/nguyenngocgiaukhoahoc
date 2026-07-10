@@ -387,3 +387,14 @@ setTimeout(pullFromCloudFirestoreAdmin, 600);
   setTimeout(ensureAssistant, 300);
   setTimeout(ensureAssistant, 900);
 })();
+
+// Sidebar Toggle Logic
+(()=>{
+  const toggleBtn = document.getElementById('toggleAdminSide');
+  const adminSide = document.getElementById('adminSide');
+  if(toggleBtn && adminSide) {
+    toggleBtn.onclick = () => {
+      adminSide.classList.toggle('collapsed');
+    };
+  }
+})();

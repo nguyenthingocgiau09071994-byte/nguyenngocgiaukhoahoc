@@ -138,7 +138,8 @@ document.addEventListener("submit", function(event) {
 (()=>{function hideLegacyMembership(){document.querySelectorAll('#memberButton,.memberButton,#memberModal,.memberModal,.planGrid').forEach(el=>{el.style.setProperty('display','none','important')})}document.addEventListener('DOMContentLoaded',hideLegacyMembership);setTimeout(hideLegacyMembership,100);setInterval(hideLegacyMembership,800)})();
 const courses={
 business:{name:"Xây Kênh Qua Video Đa Nền Tảng",subtitle:"28 ngày làm chủ video TikTok, Facebook và các nền tảng",desc:"Khóa học dành cho người mới, người bán hàng và chủ cửa hàng muốn tự tin quay video, dựng CapCut và xây kênh tạo doanh thu.",students:"2.850+",rating:"4.9",hours:"9 giờ",level:"28 bài thực chiến",icon:"▶",image:"assets/slide-user-1.png"},
-growth:{name:"Làm Chủ Bản Thân & Nâng Tầm Cuộc Sống",subtitle:"Tư duy đúng, kỷ luật tốt, giao tiếp hiệu quả",desc:"Lộ trình phát triển toàn diện giúp bạn quản trị bản thân, nâng cao năng lực giao tiếp và duy trì hiệu suất trong công việc lẫn cuộc sống.",students:"1.920+",rating:"4.8",hours:"10 giờ",level:"Mọi trình độ",icon:"✦",image:"assets/slide-growth.png"}};
+growth:{name:"Làm Chủ Bản Thân & Nâng Tầm Cuộc Sống",subtitle:"Tư duy đúng, kỷ luật tốt, giao tiếp hiệu quả",desc:"Lộ trình phát triển toàn diện giúp bạn quản trị bản thân, nâng cao năng lực giao tiếp và duy trì hiệu suất trong công việc lẫn cuộc sống.",students:"1.920+",rating:"4.8",hours:"10 giờ",level:"Mọi trình độ",icon:"✦",image:"assets/slide-growth.png"},
+ai:{name:"Ứng Dụng AI Thực Chiến (HOT)",subtitle:"Dùng ChatGPT & AI tạo content, kịch bản, hình ảnh",desc:"Khóa học đột phá giúp bạn tự động hóa công việc, nhân bản bản thân và tạo nội dung không giới hạn với sức mạnh của Trí tuệ nhân tạo.",students:"Mới ra mắt",rating:"5.0",hours:"5 giờ",level:"Xu hướng 2026",icon:"🤖",image:"assets/slide-business.png"}};
 const modules=[
 {id:"bch1",cat:"business",title:"Tư duy và sự tự tin trước camera",summary:"Vượt rào cản, nói tự nhiên và mở đầu thu hút",progress:0,open:true,lessons:[["b1","Vượt qua rào cản sợ quay video lên hình","14:30"],["b2","Bố cục quay video như thế nào","16:20"],["b3","Cách đứng nói chuyện tự tin trước camera","18:10"],["b4","3 lỗi khiến video của bạn trông bị giả","12:45"],["b5","Cách đặt câu hook mở đầu video","15:30"],["b6","Liệt kê vấn đề khách hàng đang gặp phải","17:15"],["b7","Cách tự tin nói chuyện trước camera","19:00"]]},
 {id:"bch2",cat:"business",title:"Kỹ thuật quay video chuyên nghiệp",summary:"Làm chủ góc máy, ánh sáng và quy trình quay",progress:0,lessons:[["b8","Cách quay video đúng và dễ áp dụng","16:40"],["b9","Cách quay video ghép short","18:25"],["b10","Quay video ánh sáng đẹp, rõ và sắc nét","21:10"],["b11","Setup góc quay video thế nào là đúng","20:35"],["b12","Làm quen phần mềm edit video CapCut","24:00"]]},
@@ -147,7 +148,10 @@ const modules=[
 {id:"bch5",cat:"business",title:"Tăng trưởng và kế hoạch 28 ngày",summary:"Quảng cáo, tối ưu và hoàn thành thử thách",progress:0,lessons:[["b25","Nên làm gì khi bí ý tưởng quay","16:10"],["b26","Khi nào chạy quảng cáo cho video","18:55"],["b27","Quay video nhanh, hiệu quả, tiết kiệm thời gian","21:20"],["b28","Kết thúc 28 ngày làm video cho người mới","23:00"]]},
 {id:"gch1",cat:"growth",title:"Làm chủ tư duy và mục tiêu",summary:"Hiểu bản thân và thiết kế hướng đi",progress:60,open:true,lessons:[["g1","Khám phá giá trị và thế mạnh bản thân","21:20",1],["g2","Thiết lập mục tiêu SMART","18:35"],["g3","Vượt qua niềm tin giới hạn","20:10"]]},
 {id:"gch2",cat:"growth",title:"Kỷ luật và quản trị hiệu suất",summary:"Xây thói quen và làm chủ thời gian",progress:25,lessons:[["g4","Kỷ luật cá nhân trong 30 ngày","17:15"],["g5","Quản trị thời gian và năng lượng","24:40"],["g6","Duy trì sự tập trung sâu","19:25"]]},
-{id:"gch3",cat:"growth",title:"Giao tiếp và xây dựng ảnh hưởng",summary:"Kết nối tự tin và thuyết phục",progress:0,lessons:[["g7","Kỹ năng lắng nghe chủ động","18:20"],["g8","Giao tiếp thuyết phục","22:45"],["g9","Xử lý mâu thuẫn tích cực","20:30"]]}];
+{id:"gch3",cat:"growth",title:"Giao tiếp và xây dựng ảnh hưởng",summary:"Kết nối tự tin và thuyết phục",progress:0,lessons:[["g7","Kỹ năng lắng nghe chủ động","18:20"],["g8","Giao tiếp thuyết phục","22:45"],["g9","Xử lý mâu thuẫn tích cực","20:30"]]},
+{id:"aich1",cat:"ai",title:"Nhập môn AI Thực Chiến",summary:"Hiểu rõ ChatGPT và các siêu AI",progress:0,open:true,lessons:[["ai1","Bản chất của AI và cách nó thay đổi kinh doanh","12:15"],["ai2","Tạo tài khoản và làm quen giao diện ChatGPT","09:40"],["ai3","Công thức 4 bước viết Prompt (câu lệnh) chuẩn xác","18:20"]]},
+{id:"aich2",cat:"ai",title:"Dùng AI tự động hóa Content & Video",summary:"Kịch bản, tiêu đề, và kế hoạch",progress:0,lessons:[["ai4","Dùng ChatGPT viết kịch bản video TikTok viral","15:30"],["ai5","Lên kế hoạch đăng bài 30 ngày trong 5 phút","14:10"],["ai6","Dùng AI tạo hình ảnh và video tự động","22:45"]]}
+];
 const descriptions={};modules.forEach(m=>m.lessons.forEach(l=>descriptions[l[0]]="Bài học thực chiến thuộc chương "+m.title+", có hướng dẫn từng bước và bài tập áp dụng ngay."));
 let active="business",current=null;const all=modules.flatMap(m=>m.lessons.map(l=>({id:l[0],title:l[1],time:l[2],done:l[3],current:l[4],cat:m.cat,module:m.title,desc:descriptions[l[0]]})));const q=s=>document.querySelector(s),qa=s=>document.querySelectorAll(s);
 function courseIntro(){const c=courses[active];q("#courseIntro").innerHTML='<div class="courseCover '+active+'"><div class="courseImage" style="background-image:url('+c.image+')"><i>'+c.icon+'</i></div><div class="courseMain"><span class="commercialBadge">KHÓA HỌC NỔI BẬT</span><h2>'+c.name+'</h2><h3>'+c.subtitle+'</h3><p>'+c.desc+'</p><div class="courseFacts"><span><b>'+c.students+'</b><small>Học viên</small></span><span><b>★ '+c.rating+'</b><small>Đánh giá</small></span><span><b>'+c.hours+'</b><small>Thời lượng</small></span><span><b>'+c.level+'</b><small>Trình độ</small></span></div></div><div class="courseAction"><span>Đã hoàn thành</span><b>'+(active==="business"?"42%":"28%")+'</b><i><em style="width:'+(active==="business"?"42%":"28%")+'"></em></i><button data-play="'+(active==="business"?"b1":"g1")+'">▶ Tiếp tục học</button><small>Truy cập trọn đời · Cập nhật miễn phí</small></div></div>'}
@@ -1637,4 +1641,52 @@ window.addEventListener('focus', pullFromCloudFirestoreHomepage);
   document.addEventListener('DOMContentLoaded', syncSidebar);
   [60, 250, 800, 1500].forEach(delay => setTimeout(syncSidebar, delay));
   setInterval(syncSidebar, 1200);
+})();
+
+// --- AI Chatbot Logic ---
+(()=>{
+  const btn = document.querySelector('#aiChatBtn');
+  const panel = document.querySelector('#aiChatPanel');
+  const close = document.querySelector('#closeAiChat');
+  const form = document.querySelector('#aiChatForm');
+  const input = document.querySelector('#aiInput');
+  const msgs = document.querySelector('#aiChatMessages');
+  if(!btn || !panel) return;
+  
+  btn.onclick = () => {
+    panel.classList.toggle('open');
+    if(panel.classList.contains('open')) input.focus();
+  };
+  close.onclick = () => panel.classList.remove('open');
+  
+  const replies = [
+    "Dạ, phần này anh có thể xem chi tiết ở lộ trình khóa học Kinh Doanh & Xây Kênh nhé!",
+    "Một câu hỏi rất hay! Để giải quyết vấn đề này, anh có thể áp dụng nguyên tắc 3 giây đầu tiên trong video.",
+    "Anh cứ làm theo lộ trình từng bước trong khóa học, mọi thứ sẽ dễ dàng hơn nhiều.",
+    "Tôi là Trợ giảng AI. Câu hỏi này tôi xin ghi nhận để báo cho giảng viên Nguyễn Ngọc Giàu giải đáp thêm nhé!",
+    "Anh hãy thử kết hợp CapCut với một vài tính năng của TikTok để có hiệu ứng tốt nhất.",
+    "Nếu gặp khó khăn, anh có thể đặt câu hỏi trong nhóm hỗ trợ học viên nhé!"
+  ];
+  
+  function addMessage(text, isUser = false) {
+    const msg = document.createElement('div');
+    msg.className = 'aiMessage ' + (isUser ? 'user' : 'ai');
+    msg.innerHTML = '<div class="aiAvatar">' + (isUser ? 'HV' : '✨') + '</div><div class="aiText">' + text + '</div>';
+    msgs.appendChild(msg);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  
+  form.onsubmit = e => {
+    e.preventDefault();
+    const val = input.value.trim();
+    if(!val) return;
+    addMessage(val, true);
+    input.value = '';
+    
+    // Simulate AI thinking
+    setTimeout(() => {
+      const reply = replies[Math.floor(Math.random() * replies.length)];
+      addMessage(reply, false);
+    }, 800 + Math.random() * 1000);
+  };
 })();
