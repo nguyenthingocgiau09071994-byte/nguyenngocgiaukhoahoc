@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Không tìm thấy trang · Masterclass VN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Masterclass VN 404 — Brand-consistent standalone page */
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --brand-900:#04292e;
+    --brand-700:#0d5962;
+    --brand-500:#105f68;
+    --brand-200:#63c1bb;
+    --brand-100:#9ed5d1;
+    --gold-500:#e7b84f;
+    --gold-300:#ffd875;
+    --text-on-dark:#e0f4f4;
+    --text-muted-dark:#9ed5d1;
+    --radius-md:12px;
+    --radius-xl:22px;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Be Vietnam Pro',Arial,sans-serif;
+    background:linear-gradient(160deg,var(--brand-900) 0%,var(--brand-700) 60%,#0b6870 100%);
+    color:#fff;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:2rem;
+  }
+  .wrap{max-width:520px;width:100%}
+
+  /* Brand logo */
+  .brand{
+    display:inline-flex;align-items:center;gap:10px;
+    text-decoration:none;color:#fff;margin-bottom:2.5rem;
+    opacity:.85;
+  }
+  .brand-icon{
+    width:44px;height:44px;border-radius:13px;
+    background:linear-gradient(135deg,var(--brand-500),var(--brand-700));
+    border:2px solid var(--brand-200);
+    display:grid;place-items:center;
+    font:700 22px Georgia,serif;color:#fff;
+    box-shadow:0 6px 18px rgba(0,0,0,.3);
+  }
+  .brand-text{font:700 15px/1 'Be Vietnam Pro',sans-serif;letter-spacing:.5px}
+  .brand-text small{display:block;font-size:9px;color:var(--brand-100);margin-top:3px;letter-spacing:1px}
+
+  /* 404 number */
+  .code{
+    font-size:clamp(5rem,18vw,9rem);
+    font-weight:800;
+    line-height:1;
+    background:linear-gradient(135deg,var(--brand-200),var(--gold-300));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom:.5rem;
+    letter-spacing:-4px;
+  }
+  .badge{
+    display:inline-block;
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.25);
+    border-radius:20px;
+    padding:6px 16px;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:1.5px;
+    color:var(--brand-100);
+    margin-bottom:1.5rem;
+  }
+  h1{
+    font-size:clamp(1.4rem,4vw,1.9rem);
+    font-weight:800;
+    color:#fff;
+    margin-bottom:.75rem;
+    letter-spacing:-.5px;
+  }
+  p{
+    font-size:15px;
+    color:var(--text-muted-dark);
+    margin-bottom:2.5rem;
+    line-height:1.7;
+    max-width:380px;
+    margin-inline:auto;
+  }
+
+  /* Actions */
+  .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn-primary{
+    display:inline-flex;align-items:center;gap:8px;
+    background:linear-gradient(135deg,var(--gold-500),var(--gold-300));
+    color:var(--brand-900);
+    text-decoration:none;
+    padding:14px 28px;
+    border-radius:var(--radius-md);
+    font-weight:800;
+    font-size:14px;
+    transition:transform .2s,box-shadow .2s;
+    box-shadow:0 8px 24px rgba(231,184,79,.35);
+  }
+  .btn-primary:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 32px rgba(231,184,79,.55);
+  }
+  .btn-ghost{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.25);
+    color:#fff;
+    text-decoration:none;
+    padding:14px 24px;
+    border-radius:var(--radius-md);
+    font-weight:700;
+    font-size:14px;
+    transition:background .2s,border-color .2s;
+  }
+  .btn-ghost:hover{
+    background:rgba(255,255,255,.18);
+    border-color:rgba(255,255,255,.5);
+  }
+
+  /* Decoration */
+  .deco{
+    margin-top:3rem;
+    font-size:11px;
+    color:rgba(255,255,255,.35);
+  }
+
+  @media(max-width:420px){
+    .actions{flex-direction:column;align-items:center}
+    .btn-primary,.btn-ghost{width:100%;justify-content:center}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="brand" href="/">
+    <div class="brand-icon">M</div>
+    <div class="brand-text">MASTERCLASS<small>HỌC VIỆN THỰC CHIẾN</small></div>
+  </a>
+  <div class="code">404</div>
+  <div class="badge">TRANG KHÔNG TỒN TẠI</div>
+  <h1>Ôi! Trang này không tìm thấy</h1>
+  <p>Trang bạn đang tìm kiếm không tồn tại, đã bị di chuyển hoặc địa chỉ URL không chính xác.</p>
+  <div class="actions">
+    <a class="btn-primary" href="/">← Về trang chủ</a>
+    <a class="btn-ghost" href="/admin.html">Trang quản trị</a>
+  </div>
+  <p class="deco">© 2026 Masterclass VN</p>
+</div>
+</body>
+</html>

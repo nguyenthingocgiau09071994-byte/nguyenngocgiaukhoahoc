@@ -1,0 +1,70 @@
+# ─── Node ─────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Build outputs ────────────────────────────────────────
+build/
+dist/
+.wrangler/
+
+# ─── Environment & Secrets ────────────────────────────────
+.env
+.env.local
+.env.production
+.env.development
+!.env.example
+
+# ─── Cloudflare D1 local ──────────────────────────────────
+.mf/
+.d1/
+
+# ─── Firebase (legacy — không dùng nữa) ──────────────────
+.firebase/
+.firebaserc
+firebase.json
+firestore.indexes.json
+firestore.rules
+firebase-config.js
+firebase-applet-config.json
+firebase-blueprint.json
+
+# ─── OS files ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.log
+
+# ─── Editor ───────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# ─── Backup & temp files ──────────────────────────────────
+_codex_backup_*/
+*.backup
+*.bak
+*-backup.txt
+*-current.txt
+*-snippet.txt
+*-section.txt
+*-frag.txt
+*Segment.txt
+dashboard-*.txt
+xem-lines.txt
+diff.txt
+aside-*.txt
+*.rar
+*.tar.gz
+*.zip
+make_zip.py
+cleanup.cjs
+inspect-diffs.cjs
+remove-temp.ps1
+
+# ─── AI Studio artifacts ──────────────────────────────────
+assets/.aistudio/
+
+# ─── Coverage ─────────────────────────────────────────────
+coverage/

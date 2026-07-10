@@ -1,0 +1,58 @@
+# Cloudflare Pages — Cache headers configuration
+# Copy this file as _headers in your Cloudflare Pages project root
+
+# Cache static assets
+/**/*.js
+  Cache-Control: public, max-age=86400, stale-while-revalidate=3600
+
+/**/*.css
+  Cache-Control: public, max-age=86400, stale-while-revalidate=3600
+
+# Images — long cache
+/**/*.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/**/*.jpg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/**/*.jpeg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/**/*.webp
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/**/*.gif
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/**/*.svg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/**/*.ico
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/**/*.woff2
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+
+/**/*.woff
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+
+/**/*.ttf
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+
+# Security headers for all pages
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# API routes — no cache
+/api/*
+  Cache-Control: no-store, max-age=0
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Authorization
+
+# Fonts from Google
+/fonts.googleapis.com
+  Access-Control-Allow-Origin: https://fonts.gstatic.com

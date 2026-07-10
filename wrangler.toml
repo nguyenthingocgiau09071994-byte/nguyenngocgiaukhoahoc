@@ -1,0 +1,36 @@
+name = "masterclass-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# ─── D1 Database ───────────────────────────────────────────
+[[d1_databases]]
+binding = "DB"
+database_name = "masterclass-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# ─── KV Namespace ───────────────────────────────────────────
+[[kv_namespaces]]
+binding = "KV"
+id = "REPLACE_WITH_YOUR_KV_ID"
+
+# ─── Environment Variables (non-secret) ────────────────────
+[vars]
+ADMIN_EMAILS = "admin@masterclass.vn,nguyenngocgiau.com@gmail.com,nguyenngocgiau@gmail.com,admin@nguyenngocgiau.com,giaunne@gmail.com,giau@nguyenngocgiau.com"
+
+# ─── Secrets (set via `wrangler secret put`) ───────────────
+# wrangler secret put JWT_SECRET
+# wrangler secret put CLOUDFLARE_ACCOUNT_ID
+
+# ─── Production Environment ────────────────────────────────
+[env.production]
+name = "masterclass-api"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "masterclass-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+[[env.production.kv_namespaces]]
+binding = "KV"
+id = "REPLACE_WITH_YOUR_KV_ID"

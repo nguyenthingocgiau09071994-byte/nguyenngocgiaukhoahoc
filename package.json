@@ -1,0 +1,44 @@
+{
+  "name": "masterclass-vn",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port=3000 --host=0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
+    "cf:worker:deploy": "wrangler deploy",
+    "cf:worker:dev": "wrangler dev --local",
+    "cf:db:create": "wrangler d1 create masterclass-db",
+    "cf:db:schema": "wrangler d1 execute masterclass-db --remote --file=schema.sql",
+    "cf:db:schema:local": "wrangler d1 execute masterclass-db --local --file=schema.sql",
+    "cf:db:seed": "wrangler d1 execute masterclass-db --remote --file=seed.sql",
+    "cf:kv:create": "wrangler kv:namespace create SESSION_KV",
+    "cf:pages:deploy": "wrangler pages deploy . --project-name=masterclass-vn",
+    "cf:pages:build": "npm run build && wrangler pages deploy dist --project-name=masterclass-vn"
+  },
+  "dependencies": {
+    "@google/genai": "^2.4.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "@vitejs/plugin-react": "^5.0.4",
+    "lucide-react": "^0.546.0",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "vite": "^6.2.3",
+    "express": "^4.21.2",
+    "dotenv": "^17.2.3",
+    "motion": "^12.23.24"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250415.0",
+    "@types/node": "^22.14.0",
+    "autoprefixer": "^10.4.21",
+    "esbuild": "^0.25.0",
+    "tailwindcss": "^4.1.14",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.3",
+    "@types/express": "^4.17.21"
+  }
+}

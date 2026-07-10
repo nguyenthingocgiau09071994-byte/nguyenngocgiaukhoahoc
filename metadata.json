@@ -1,0 +1,6 @@
+{
+  "name": "Masterclass VN",
+  "description": "Học viện đào tạo kinh doanh và phát triển bản thân - Masterclass VN",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
