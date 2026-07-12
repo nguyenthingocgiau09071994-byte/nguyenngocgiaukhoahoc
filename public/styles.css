@@ -12936,3 +12936,41 @@ body:not(.adminPage) .slideContent h1 em {
 .learnerProfileItem.profileInfo-role i { background: #e7b84f !important; color: #08302f !important; }
 .learnerProfileItem.profileInfo-access i { background: #7c3aed !important; color: #ffffff !important; }
 .learnerProfileItem.profileInfo-status i { background: #059669 !important; color: #ffffff !important; }
+
+/* Mobile app-style bottom tab bar (student page only) */
+.mobileTabBar { display: none; }
+@media (max-width: 760px) {
+  .app > main { padding-bottom: calc(66px + env(safe-area-inset-bottom)) !important; }
+  .mobileTabBar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 150;
+    background: #ffffff;
+    border-top: 1px solid #e7edec;
+    padding: 7px 2px calc(6px + env(safe-area-inset-bottom));
+    box-shadow: 0 -6px 20px rgba(6, 61, 67, 0.08);
+  }
+  .mobileTabBar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-decoration: none;
+    color: #6b8481;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px 0;
+  }
+  .mobileTabBar a i {
+    font-style: normal;
+    font-size: 17px;
+    line-height: 1;
+  }
+  .mobileTabBar a.active {
+    color: #0b3d3f;
+  }
+}
