@@ -9679,6 +9679,19 @@ aside#side .brand small, a.brand small {
   margin-top: 3px !important;
   display: block !important;
 }
+/* Student-side logo mark only — admin page keeps its own text mark */
+aside#side .brand i {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+}
+aside#side .brand i svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
 aside#side nav a {
   display: flex !important;
   align-items: center !important;
