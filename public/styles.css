@@ -12909,3 +12909,30 @@ body:not(.adminPage) .slideContent h1 em {
   .app.collapsed aside#side .help::before { content: "?"; font-size: 22px; color: var(--l); font-weight: bold; display: block; margin: 0 auto; }
   header #menu, .topbar #menu { display: grid !important; }
 }
+
+/* Final profile card contrast: white row, dark text, vivid per-field icon */
+.learnerProfileItem {
+  background: #ffffff !important;
+  border: 1px solid #e7edec !important;
+  box-shadow: 0 2px 8px rgba(6,61,67,.05) !important;
+}
+.learnerProfileItem:hover {
+  background: #f6faf9 !important;
+  border-color: #d5e4e2 !important;
+}
+.learnerProfileItem span {
+  color: #6b8481 !important;
+}
+.learnerProfileItem b {
+  color: #0b3d3f !important;
+}
+.learnerProfileItem i {
+  box-shadow: none !important;
+  border: none !important;
+}
+.learnerProfileItem.profileInfo-id i { background: #0891b2 !important; color: #ffffff !important; }
+.learnerProfileItem.profileInfo-phone i { background: #16a34a !important; color: #ffffff !important; }
+.learnerProfileItem.profileInfo-email i { background: #2563eb !important; color: #ffffff !important; }
+.learnerProfileItem.profileInfo-role i { background: #e7b84f !important; color: #08302f !important; }
+.learnerProfileItem.profileInfo-access i { background: #7c3aed !important; color: #ffffff !important; }
+.learnerProfileItem.profileInfo-status i { background: #059669 !important; color: #ffffff !important; }
