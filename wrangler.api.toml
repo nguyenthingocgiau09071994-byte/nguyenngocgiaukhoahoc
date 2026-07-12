@@ -3,16 +3,21 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
+# ─── Route: forward /api/* on the production domain to this Worker ─
+routes = [
+  { pattern = "nguyenngocgiau.com/api/*", zone_name = "nguyenngocgiau.com" }
+]
+
 # ─── D1 Database ───────────────────────────────────────────
 [[d1_databases]]
 binding = "DB"
 database_name = "masterclass-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "05e3423a-d94d-4e5d-ac3b-c4855d6e7589"
 
 # ─── KV Namespace ───────────────────────────────────────────
 [[kv_namespaces]]
 binding = "KV"
-id = "REPLACE_WITH_YOUR_KV_ID"
+id = "a065bc3f266f44e8a406ab8d5cd10ff8"
 
 # ─── Environment Variables (non-secret) ────────────────────
 [vars]
@@ -29,8 +34,8 @@ name = "masterclass-api"
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "masterclass-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "05e3423a-d94d-4e5d-ac3b-c4855d6e7589"
 
 [[env.production.kv_namespaces]]
 binding = "KV"
-id = "REPLACE_WITH_YOUR_KV_ID"
+id = "a065bc3f266f44e8a406ab8d5cd10ff8"
