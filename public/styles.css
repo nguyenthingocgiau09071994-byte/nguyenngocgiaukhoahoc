@@ -12878,3 +12878,21 @@ body:not(.adminPage) .slideContent h1 em {
 .adminPage .memberMetrics > span > div { gap: 4px; }
 .adminPage .memberMetrics b { font-size: 26px !important; }
 
+@media(min-width: 761px) {
+  .app { transition: grid-template-columns 0.3s ease; }
+  .app.collapsed { grid-template-columns: 90px 1fr; }
+  .app.collapsed aside#side { padding: 30px 10px !important; align-items: center; width: 90px !important; }
+  .app.collapsed aside#side .brand b,
+  .app.collapsed aside#side .profile p,
+  .app.collapsed aside#side .overall,
+  .app.collapsed aside#side nav a span,
+  .app.collapsed aside#side .help p { display: none !important; }
+  .app.collapsed aside#side nav a { justify-content: center; padding: 12px 0; font-size: 0; min-height: auto; }
+  .app.collapsed aside#side nav a::before { margin: 0; font-size: 17px; }
+  .app.collapsed aside#side .brand { justify-content: center; margin-bottom: 25px !important; }
+  .app.collapsed aside#side .brand i { margin: 0; }
+  .app.collapsed aside#side .profile { justify-content: center; margin-bottom: 15px; }
+  .app.collapsed aside#side .help { justify-content: center; text-align: center; font-size: 0; background: transparent; border: none; box-shadow: none; padding: 0; }
+  .app.collapsed aside#side .help::before { content: "?"; font-size: 22px; color: var(--l); font-weight: bold; display: block; margin: 0 auto; }
+  header #menu, .topbar #menu { display: grid !important; }
+}
