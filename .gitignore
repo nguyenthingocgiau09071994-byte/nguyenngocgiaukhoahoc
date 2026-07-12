@@ -68,3 +68,6 @@ assets/.aistudio/
 
 # ─── Coverage ─────────────────────────────────────────────
 coverage/
+
+.dev.vars*
+!.dev.vars.example
