@@ -37,7 +37,7 @@
  *   PUT    /api/qa/:lessonId
  */
 
-import { D1Database } from '@cloudflare/workers-types';
+import { D1Database, KVNamespace } from '@cloudflare/workers-types';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 // ─── Types ────────────────────────────────────────────────
@@ -271,12 +271,14 @@ async function handleContentList(request: Request, env: Env) {
     id: number;
     type: string;
     category: string;
+    placement: string;
     access_plan: string;
     status: string;
     title: string;
     summary: string;
     content: string;
     image: string;
+    video: string;
     date: string;
     views: number;
     likes: number;
