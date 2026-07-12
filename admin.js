@@ -192,64 +192,7 @@ function renderAccessMembers(){const members=JSON.parse(localStorage.getItem('ac
 
 
 
-/* ==========================================================================
-   CHECKPOINT 29: FIRESTORE CLOUD DATABASE HYBRID SYNC ENGINE (ADMIN)
-   ========================================================================== */
-const FIRESTORE_CLOUD_URL = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0563043196/databases/(default)/documents/masterclass_db/admin_store";
 
-async function pushToCloudFirestore() {
-  try {
-    const payload = {
-      fields: {
-        content: { stringValue: JSON.stringify(contents || []) },
-        users: { stringValue: JSON.stringify(users || []) },
-        qa: { stringValue: JSON.stringify(qaList || []) },
-        lastUpdated: { stringValue: new Date().toISOString() }
-      }
-    };
-    const res = await fetch(FIRESTORE_CLOUD_URL, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      console.log("[Firestore Sync] Successfully saved Admin state to Cloud Firestore Database");
-    }
-  } catch (err) {
-    console.warn("[Firestore Sync] Push warning:", err.message);
-  }
-}
-
-async function pullFromCloudFirestoreAdmin() {
-  try {
-    const res = await fetch(FIRESTORE_CLOUD_URL);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.fields && data.fields.content && data.fields.content.stringValue) {
-        const cloudContent = JSON.parse(data.fields.content.stringValue);
-        if (Array.isArray(cloudContent) && cloudContent.length > 0) {
-          contents = cloudContent;
-          localStorage.setItem('academy_content', JSON.stringify(contents));
-          if (typeof renderContents === 'function') renderContents();
-          else if (typeof render === 'function') render();
-          console.log("[Firestore Sync] Synced " + contents.length + " items from Cloud Firestore Database");
-        }
-      }
-    }
-  } catch (err) {
-    console.warn("[Firestore Sync] Pull warning:", err.message);
-  }
-}
-
-// Intercept save/delete actions to sync with Firestore Cloud
-const _originalPersistState = typeof persistState === 'function' ? persistState : null;
-persistState = function() {
-  if (_originalPersistState) _originalPersistState();
-  pushToCloudFirestore();
-};
-
-// Initial Cloud Sync after page load
-setTimeout(pullFromCloudFirestoreAdmin, 600);
 
 /* Codex stability pass: simplified publishing assistant.
    This keeps the existing content schema, but makes the admin choose the

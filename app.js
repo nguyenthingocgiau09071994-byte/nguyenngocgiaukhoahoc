@@ -157,7 +157,8 @@ let active="business",current=null;const all=modules.flatMap(m=>m.lessons.map(l=
 function courseIntro(){const c=courses[active];q("#courseIntro").innerHTML='<div class="courseCover '+active+'"><div class="courseImage" style="background-image:url('+c.image+')"><i>'+c.icon+'</i></div><div class="courseMain"><span class="commercialBadge">KHÓA HỌC NỔI BẬT</span><h2>'+c.name+'</h2><h3>'+c.subtitle+'</h3><p>'+c.desc+'</p><div class="courseFacts"><span><b>'+c.students+'</b><small>Học viên</small></span><span><b>★ '+c.rating+'</b><small>Đánh giá</small></span><span><b>'+c.hours+'</b><small>Thời lượng</small></span><span><b>'+c.level+'</b><small>Trình độ</small></span></div></div><div class="courseAction"><span>Đã hoàn thành</span><b>'+(active==="business"?"42%":"28%")+'</b><i><em style="width:'+(active==="business"?"42%":"28%")+'"></em></i><button data-play="'+(active==="business"?"b1":"g1")+'">▶ Tiếp tục học</button><small>Truy cập trọn đời · Cập nhật miễn phí</small></div></div>'}
 function render(term=""){courseIntro();const data=modules.filter(m=>m.cat===active).map(m=>({...m,lessons:m.lessons.filter(l=>l[1].toLowerCase().includes(term.toLowerCase()))})).filter(m=>!term||m.lessons.length);q("#modules").innerHTML=data.map((m,mi)=>'<article class="module '+(m.open||term?"open":"")+'"><button class="chapterHead"><span class="chapterLabel">CHƯƠNG '+(mi+1)+'</span><span class="modTitle"><b>'+m.title+'</b><small>'+m.summary+'</small></span><span class="chapterMeta"><b>'+m.lessons.length+' bài học</b><small>'+m.progress+'% hoàn thành</small></span><span class="chev">⌄</span></button><div class="lessons">'+m.lessons.map((l,i)=>'<div class="lesson '+(l[4]?"current":"")+'"><div><span class="state '+(l[3]?"done":"")+'">'+(l[3]?"✓":String(i+1).padStart(2,"0"))+'</span><span class="lessonText"><small>BÀI TẬP '+(i+1)+'</small><b>'+l[1]+'</b><em>Video bài giảng · Có tài liệu đính kèm</em></span></div><span class="time"><b>◷ '+l[2]+'</b><small>phút</small></span><button data-play="'+l[0]+'">▶ Xem bài giảng</button></div>').join("")+'</div></article>').join("")||'<div class="empty">Không tìm thấy bài học.</div>';const vids=all.filter(l=>l.cat===active&&l.title.toLowerCase().includes(term.toLowerCase()));q("#videoGrid").innerHTML=vids.map((l,i)=>'<article class="videoCard"><button class="thumb" data-play="'+l.id+'"><span class="play">▶</span><span class="dur">'+l.time+'</span></button><div class="videoBody"><span class="tag">'+(l.cat==="business"?"Kinh doanh":"Phát triển bản thân")+'</span><h3>'+l.title+'</h3><footer><label>BÀI '+(i+1)+'</label><button data-play="'+l.id+'">Xem ngay →</button></footer></div></article>').join("")||'<div class="empty">Không tìm thấy video.</div>'}
 function openVideo(id){current=all.find(l=>l.id===id);if(!current)return;q("#modName").textContent=current.module;q("#modTitle").textContent=current.title;q("#modDesc").textContent=current.desc;q("#modTime").textContent="◷ "+current.time+" phút";q("#frame").src="https://www.youtube.com/embed/M7lc1UVf-VE?autoplay=1&rel=0";q("#modal").classList.add("open");document.body.style.overflow="hidden"}function closeVideo(){q("#modal").classList.remove("open");q("#frame").src="";document.body.style.overflow=""}function toast(s){q("#toast").textContent=s;q("#toast").classList.add("show");clearTimeout(window.t);window.t=setTimeout(()=>q("#toast").classList.remove("show"),2500)}
-document.addEventListener("click",e=>{const p=e.target.closest("[data-play]");if(p)return openVideo(p.dataset.play);const h=e.target.closest(".chapterHead");if(h)h.parentElement.classList.toggle("open");if(e.target.closest("[data-close]"))closeVideo()});qa(".tab").forEach(b=>b.onclick=()=>{active=b.dataset.cat;qa(".tab").forEach(x=>x.classList.toggle("active",x===b));render(q("#search").value);q("#curriculum").scrollIntoView({behavior:"smooth"})});q("#search").oninput=e=>render(e.target.value);q("#complete").onclick=()=>{if(current){current.done=1;toast("Đã hoàn thành: "+current.title);closeVideo();render(q("#search").value)}};document.addEventListener("keydown",e=>e.key==="Escape"&&closeVideo());const note=q("#note");note.value=localStorage.getItem("masterclass-note")||"";q("#save").onclick=()=>{localStorage.setItem("masterclass-note",note.value);q("#noteStatus").textContent="Đã lưu lúc "+new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});toast("Đã lưu ghi chú")};q("#menu").onclick=()=>q("#side").classList.add("open");q("#closeSide").onclick=()=>q("#side").classList.remove("open");qa("#side nav a").forEach(a=>a.onclick=()=>{qa("#side nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active");q("#side").classList.remove("open")});q("#filter").onclick=()=>toast("Đang hiển thị tất cả bài giảng");render();
+document.addEventListener("click",e=>{const p=e.target.closest("[data-play]");if(p)return openVideo(p.dataset.play);const h=e.target.closest(".chapterHead");if(h)h.parentElement.classList.toggle("open");if(e.target.closest("[data-close]"))closeVideo()});qa(".tab").forEach(b=>b.onclick=()=>{active=b.dataset.cat;qa(".tab").forEach(x=>x.classList.toggle("active",x===b));render(q("#search").value);q("#curriculum").scrollIntoView({behavior:"smooth"})});q("#search").oninput=e=>render(e.target.value);q("#complete").onclick=()=>{if(current){current.done=1;toast("Đã hoàn thành: "+current.title);closeVideo();render(q("#search").value)}};document.addEventListener("keydown",e=>e.key==="Escape"&&closeVideo());const note=q("#note");note.value=localStorage.getItem("masterclass-note")||"";q("#save").onclick=()=>{localStorage.setItem("masterclass-note",note.value);q("#noteStatus").textContent="Đã lưu lúc "+new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});toast("Đã lưu ghi chú")};q("#menu").onclick=()=>{const side=q("#side");const isOpen=side.classList.toggle("open");q("#menu").setAttribute("aria-expanded",isOpen)};q("#closeSide").onclick=()=>{q("#side").classList.remove("open");q("#menu").setAttribute("aria-expanded","false")};qa("#side nav a").forEach(a=>a.onclick=()=>{qa("#side nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active");q("#side").classList.remove("open");q("#menu").setAttribute("aria-expanded","false")});q("#filter").onclick=()=>toast("Đang hiển thị tất cả bài giảng");render();
+
 // Homepage slider and article reader
 const articles=[
 {category:"KINH DOANH",title:"5 bước xây dựng chiến lược kinh doanh bền vững",date:"01/07/2026",read:"8 phút đọc",image:"assets/slide-business.png",content:"<p>Một chiến lược tốt không bắt đầu bằng việc làm thật nhiều, mà bắt đầu từ việc lựa chọn đúng hướng đi. Dưới đây là năm bước giúp bạn xây nền tảng kinh doanh có thể phát triển lâu dài.</p><h3>1. Xác định vấn đề cần giải quyết</h3><p>Hãy bắt đầu từ một nhu cầu có thật của khách hàng. Nói chuyện trực tiếp với thị trường trước khi đầu tư lớn vào sản phẩm.</p><h3>2. Chọn đúng nhóm khách hàng</h3><p>Một thông điệp dành cho tất cả mọi người thường không thuyết phục được ai. Hãy tập trung vào nhóm bạn có khả năng phục vụ tốt nhất.</p><h3>3. Xây dựng lợi thế khác biệt</h3><p>Khác biệt có thể đến từ chuyên môn, trải nghiệm, tốc độ, dịch vụ hoặc cách bạn truyền tải giá trị.</p><h3>4. Thiết kế hệ thống bán hàng</h3><p>Tạo hành trình rõ ràng từ khi khách hàng biết đến bạn đến khi họ tin tưởng, mua hàng và quay lại.</p><h3>5. Đo lường và cải tiến</h3><p>Theo dõi doanh thu, chi phí, tỷ lệ chuyển đổi và phản hồi khách hàng mỗi tuần để điều chỉnh kịp thời.</p>"},
@@ -1464,36 +1465,7 @@ function gatedContent(){const items=JSON.parse(localStorage.getItem('academy_con
 
 
 
-/* ==========================================================================
-   CHECKPOINT 29: FIRESTORE CLOUD DATABASE HYBRID SYNC ENGINE (HOMEPAGE)
-   ========================================================================== */
-const FIRESTORE_CLOUD_URL = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0563043196/databases/(default)/documents/masterclass_db/admin_store";
 
-async function pullFromCloudFirestoreHomepage() {
-  try {
-    const res = await fetch(FIRESTORE_CLOUD_URL);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.fields && data.fields.content && data.fields.content.stringValue) {
-        const cloudContentStr = data.fields.content.stringValue;
-        const localContentStr = localStorage.getItem('academy_content');
-        if (cloudContentStr && cloudContentStr !== localContentStr) {
-          localStorage.setItem('academy_content', cloudContentStr);
-          if (typeof syncAllHeroSlidesAndArticles === 'function') {
-            syncAllHeroSlidesAndArticles();
-          }
-          console.log("[Firestore Sync] Homepage live-synced from Cloud Firestore Database!");
-        }
-      }
-    }
-  } catch (err) {
-    console.warn("[Firestore Sync] Homepage pull warning:", err.message);
-  }
-}
-
-// Sync immediately after load and whenever user returns to tab
-setTimeout(pullFromCloudFirestoreHomepage, 400);
-window.addEventListener('focus', pullFromCloudFirestoreHomepage);
 
 /* Codex stability pass: one clear mobile drawer/auth/profile controller.
    Keeps existing data and Firebase logic intact, but prevents older UI layers
