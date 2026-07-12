@@ -12793,6 +12793,8 @@ body:not(.adminPage) .slideContent h1 em {
   border-radius: 12px;
   border-top-left-radius: 4px;
   font-size: 14px;
+  font-family: "Be Vietnam Pro", Arial, sans-serif !important;
+  font-weight: 400 !important;
   line-height: 1.5;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   color: #1a1a1a;
@@ -12816,6 +12818,7 @@ body:not(.adminPage) .slideContent h1 em {
   border-radius: 20px;
   padding: 8px 16px;
   font-size: 14px;
+  font-family: "Be Vietnam Pro", Arial, sans-serif !important;
   outline: none;
 }
 .aiChatInput input:focus {
