@@ -1,5 +1,4 @@
 # Cloudflare Pages — SPA Redirects
-# Đảm bảo 404 redirect về index.html cho Single Page App routing
+# SPA fallback is handled natively by wrangler.jsonc's assets.not_found_handling
 /admin    /admin.html   200
 /admin/   /admin.html   200
-/*        /index.html   200
