@@ -1,6 +1,5 @@
-/* Cloudflare Pages — SPA Redirects
- * Đảm bảo 404 redirect về index.html cho Single Page App routing
- */
+# Cloudflare Pages — SPA Redirects
+# Đảm bảo 404 redirect về index.html cho Single Page App routing
 /admin    /admin.html   200
 /admin/   /admin.html   200
-/*        /index.html   404
+/*        /index.html   200
