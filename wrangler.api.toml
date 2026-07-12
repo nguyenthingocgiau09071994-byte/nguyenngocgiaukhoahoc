@@ -26,7 +26,7 @@ ADMIN_EMAILS = "admin@masterclass.vn,nguyenngocgiau.com@gmail.com,nguyenngocgiau
 # ─── Secrets (set via `wrangler secret put`) ───────────────
 # wrangler secret put JWT_SECRET
 # wrangler secret put CLOUDFLARE_ACCOUNT_ID
-# wrangler secret put GEMINI_API_KEY --config wrangler.api.toml
+# wrangler secret put DEEPSEEK_API_KEY --config wrangler.api.toml
 
 # ─── Production Environment ────────────────────────────────
 [env.production]

@@ -47,7 +47,7 @@ interface Env {
   KV: KVNamespace;
   JWT_SECRET: string;
   ADMIN_EMAILS: string;
-  GEMINI_API_KEY: string;
+  DEEPSEEK_API_KEY: string;
 }
 
 interface User {
@@ -663,28 +663,31 @@ async function handleAiChat(request: Request, env: Env) {
   const message = (body.message || '').trim();
   if (!message) return error('Missing message', 400);
 
-  const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: AI_CHAT_SYSTEM_PROMPT }] },
-        contents: [{ role: 'user', parts: [{ text: message }] }],
-      }),
-    }
-  );
+  const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: AI_CHAT_SYSTEM_PROMPT },
+        { role: 'user', content: message },
+      ],
+    }),
+  });
 
-  if (!geminiRes.ok) {
-    console.error('Gemini API error:', geminiRes.status, await geminiRes.text());
+  if (!dsRes.ok) {
+    console.error('DeepSeek API error:', dsRes.status, await dsRes.text());
     return error('AI service unavailable', 502);
   }
 
-  const data = (await geminiRes.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  const data = (await dsRes.json()) as {
+    choices?: { message?: { content?: string } }[];
   };
   const reply =
-    data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
+    data.choices?.[0]?.message?.content?.trim() ||
     'Xin lỗi, tôi chưa thể trả lời câu này. Bạn thử hỏi lại nhé!';
 
   return json({ reply });
