@@ -47,6 +47,7 @@ interface Env {
   KV: KVNamespace;
   JWT_SECRET: string;
   ADMIN_EMAILS: string;
+  GEMINI_API_KEY: string;
 }
 
 interface User {
@@ -653,6 +654,42 @@ async function handleQaUpdate(request: Request, env: Env, lessonId: string) {
   return json({ ok: true });
 }
 
+// ─── AI Chat ─────────────────────────────────────────────────
+
+const AI_CHAT_SYSTEM_PROMPT = `Bạn là "Trợ giảng AI" của Masterclass VN — học viện đào tạo kinh doanh và phát triển bản thân của giảng viên Nguyễn Ngọc Giàu. Trả lời ngắn gọn (tối đa 4-5 câu), thân thiện, xưng "tôi" và gọi người hỏi là "bạn". Tập trung hỗ trợ các chủ đề: kinh doanh thực chiến, xây kênh nội dung/video, phát triển bản thân. Nếu câu hỏi ngoài phạm vi khóa học, khéo léo hướng học viên quay lại nội dung khóa học hoặc đề nghị đặt câu hỏi cho giảng viên.`;
+
+async function handleAiChat(request: Request, env: Env) {
+  const body = await getJsonBody<{ message: string }>(request);
+  const message = (body.message || '').trim();
+  if (!message) return error('Missing message', 400);
+
+  const geminiRes = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: AI_CHAT_SYSTEM_PROMPT }] },
+        contents: [{ role: 'user', parts: [{ text: message }] }],
+      }),
+    }
+  );
+
+  if (!geminiRes.ok) {
+    console.error('Gemini API error:', geminiRes.status, await geminiRes.text());
+    return error('AI service unavailable', 502);
+  }
+
+  const data = (await geminiRes.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  const reply =
+    data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
+    'Xin lỗi, tôi chưa thể trả lời câu này. Bạn thử hỏi lại nhé!';
+
+  return json({ reply });
+}
+
 // ─── Health Check ───────────────────────────────────────────
 
 async function handleHealth() {
@@ -681,6 +718,9 @@ export default {
 
       // ── Health ──
       if (path === 'health') return handleHealth();
+
+      // ── AI Chat ──
+      if (path === 'ai/chat' && method === 'POST') return handleAiChat(request, env);
 
       // ── Auth ──
       if (path === 'auth/register' && method === 'POST') return handleAuthRegister(request, env);

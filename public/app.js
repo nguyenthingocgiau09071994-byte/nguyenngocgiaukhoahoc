@@ -1645,17 +1645,26 @@ function gatedContent(){const items=JSON.parse(localStorage.getItem('academy_con
     msgs.scrollTop = msgs.scrollHeight;
   }
   
-  form.onsubmit = e => {
+  form.onsubmit = async e => {
     e.preventDefault();
     const val = input.value.trim();
     if(!val) return;
     addMessage(val, true);
     input.value = '';
-    
-    // Simulate AI thinking
-    setTimeout(() => {
-      const reply = replies[Math.floor(Math.random() * replies.length)];
-      addMessage(reply, false);
-    }, 800 + Math.random() * 1000);
+
+    const thinking = document.createElement('div');
+    thinking.className = 'aiMessage ai aiThinking';
+    thinking.innerHTML = '<div class="aiAvatar">✨</div><div class="aiText">Đang trả lời...</div>';
+    msgs.appendChild(thinking);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    let reply = null;
+    if (window.cfAiChat) {
+      try { reply = await window.cfAiChat(val); } catch { reply = null; }
+    }
+    if (!reply) reply = replies[Math.floor(Math.random() * replies.length)];
+
+    thinking.remove();
+    addMessage(reply, false);
   };
 })();

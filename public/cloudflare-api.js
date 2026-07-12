@@ -414,6 +414,11 @@
     notify('Đã đăng xuất');
   };
 
+  window.cfAiChat = async function (message) {
+    const data = await cfFetch('/ai/chat', 'POST', { message });
+    return data ? data.reply : null;
+  };
+
   // ─── BOOT ────────────────────────────────────────────────
   window.cloudflareEnabled = true;
   console.log('Cloudflare API connected');
