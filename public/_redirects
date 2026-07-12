@@ -1,4 +1,4 @@
 # Cloudflare Pages — SPA Redirects
-# SPA fallback is handled natively by wrangler.jsonc's assets.not_found_handling
-/admin    /admin.html   200
-/admin/   /admin.html   200
+# SPA fallback and clean URLs (e.g. /admin -> admin.html) are handled
+# natively by wrangler.jsonc's assets config (not_found_handling +
+# default html_handling). No custom rules needed.
