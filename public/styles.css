@@ -12913,6 +12913,25 @@ body:not(.adminPage) .slideContent h1 em {
   header #menu, .topbar #menu { display: grid !important; }
 }
 
+/* Fix missing native appearance for checkboxes and radio buttons */
+input[type="checkbox"], input[type="radio"] {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  -moz-appearance: auto !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  padding: 0 !important;
+  margin: 0 4px 0 0 !important;
+  border-radius: 4px !important;
+  border: none !important;
+  accent-color: #105f68;
+  cursor: pointer;
+  display: inline-block !important;
+  flex: 0 0 18px;
+}
+
+
 /* Final profile card contrast: white row, dark text, vivid per-field icon */
 .learnerProfileItem {
   background: #ffffff !important;
