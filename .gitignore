@@ -71,3 +71,4 @@ coverage/
 
 .dev.vars*
 !.dev.vars.example
+dskey.txt
