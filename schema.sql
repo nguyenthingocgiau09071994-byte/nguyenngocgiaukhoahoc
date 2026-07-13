@@ -70,12 +70,15 @@ CREATE TABLE IF NOT EXISTS content (
 );
 
 -- ============================================================
--- 5. USER_PROGRESS — Tiến độ học tập
+-- 5. USER_VIDEO_PROGRESS — Tiến độ học tập (Sprint 06)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS user_progress (
+CREATE TABLE IF NOT EXISTS user_video_progress (
     email TEXT NOT NULL,
     lesson_id TEXT NOT NULL,
-    completed_at TEXT DEFAULT (datetime('now', 'localtime')),
+    is_completed INTEGER DEFAULT 0,
+    watch_time_seconds INTEGER DEFAULT 0,
+    last_watched_at TEXT DEFAULT (datetime('now', 'localtime')),
+    completed_at TEXT,
     PRIMARY KEY (email, lesson_id),
     FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
 );
@@ -123,20 +126,78 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 -- ============================================================
+-- 10. COURSES — Khóa học (Sprint 02)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS courses (
+    id TEXT PRIMARY KEY,
+    slug TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    subtitle TEXT DEFAULT '',
+    description TEXT DEFAULT '',
+    price INTEGER DEFAULT 0,
+    thumbnail TEXT DEFAULT '',
+    is_published INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now', 'localtime'))
+);
+
+-- ============================================================
+-- 11. COURSE_MODULES — Chương học (Sprint 03)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS course_modules (
+    id TEXT PRIMARY KEY,
+    course_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    summary TEXT DEFAULT '',
+    order_index INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now', 'localtime')),
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+-- ============================================================
+-- 12. LESSONS — Bài học / Video (Sprint 04)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS lessons (
+    id TEXT PRIMARY KEY,
+    module_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    duration_minutes INTEGER DEFAULT 0,
+    video_url TEXT DEFAULT '',
+    content_text TEXT DEFAULT '',
+    order_index INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now', 'localtime')),
+    FOREIGN KEY (module_id) REFERENCES course_modules(id) ON DELETE CASCADE
+);
+
+-- ============================================================
+-- 13. ENROLLMENTS — Ghi danh khóa học (Sprint 05)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS enrollments (
+    id TEXT PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    course_id TEXT NOT NULL,
+    status TEXT DEFAULT 'active' CHECK(status IN ('active', 'expired', 'revoked')),
+    enrolled_at TEXT DEFAULT (datetime('now', 'localtime')),
+    FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+-- ============================================================
 -- INDEXES cho performance
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_members_status ON members(status);
 CREATE INDEX IF NOT EXISTS idx_members_plan ON members(plan);
 CREATE INDEX IF NOT EXISTS idx_content_status ON content(status);
 CREATE INDEX IF NOT EXISTS idx_content_access ON content(access_plan);
-CREATE INDEX IF NOT EXISTS idx_progress_email ON user_progress(email);
+CREATE INDEX IF NOT EXISTS idx_progress_email ON user_video_progress(email);
 CREATE INDEX IF NOT EXISTS idx_favorites_email ON user_favorites(email);
 CREATE INDEX IF NOT EXISTS idx_sessions_email ON sessions(email);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_modules_course ON course_modules(course_id);
+CREATE INDEX IF NOT EXISTS idx_lessons_module ON lessons(module_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_user ON enrollments(user_email);
 
 -- ============================================================
 -- ADMIN SEED DATA — Tài khoản admin mặc định
--- (sẽ được insert riêng bằng wrangler script hoặc seed.sql)
 -- ============================================================
 -- INSERT OR IGNORE INTO users (email, name, role, plan, password_hash)
 -- VALUES ('admin@masterclass.vn', 'Admin Masterclass', 'admin', 'pro', 'PLACEHOLDER_HASH');
