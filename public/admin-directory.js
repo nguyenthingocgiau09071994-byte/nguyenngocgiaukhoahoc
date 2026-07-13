@@ -232,5 +232,6 @@
   setTimeout(() => {
     bindFilters();
     renderStudentDirectory();
+    renderStaffDirectory();
   }, 300);
 })();
