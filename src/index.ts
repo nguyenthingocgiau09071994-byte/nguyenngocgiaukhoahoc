@@ -59,6 +59,8 @@ interface User {
   avatar: string;
   created_at: string;
   login_at: number;
+  user_code: string;
+  status: string;
 }
 
 interface AuthUser {
@@ -180,12 +182,16 @@ async function handleAuthRegister(request: Request, env: Env) {
   const plan = isKnownAdmin ? 'pro' : 'starter';
   const password_hash = hashPassword(password, env.JWT_SECRET);
 
+  const joinDdmmyyyy = new Intl.DateTimeFormat('en-GB').format(new Date()).replace(/\//g, '');
+  const codeSuffix = createHmac('sha256', env.JWT_SECRET).update(e).digest('hex').slice(0, 4).toUpperCase();
+  const userCode = `${isKnownAdmin ? 'NV' : 'MC'}-${joinDdmmyyyy}-${codeSuffix}`;
+
   await env.DB
     .prepare(
-      `INSERT INTO users (email, name, phone, role, plan, password_hash, created_at, login_at)
-       VALUES (?, ?, ?, ?, ?, ?, datetime('now', 'localtime'), ?)`
+      `INSERT INTO users (email, name, phone, role, plan, password_hash, user_code, status, created_at, login_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', datetime('now', 'localtime'), ?)`
     )
-    .bind(e, name || e.split('@')[0], phone || '', role, plan, password_hash, Date.now())
+    .bind(e, name || e.split('@')[0], phone || '', role, plan, password_hash, userCode, Date.now())
     .run();
 
   // Also insert access record
@@ -436,9 +442,37 @@ async function handleMemberCreate(request: Request, env: Env) {
 async function handleUsersList(request: Request, env: Env) {
   requireAdmin(request, env);
 
+  const url = new URL(request.url);
+  const role = url.searchParams.get('role');
+  const status = url.searchParams.get('status');
+  const q = url.searchParams.get('q') || '';
+
+  const conditions: string[] = [];
+  const bindings: string[] = [];
+  if (role) {
+    conditions.push('role = ?');
+    bindings.push(role);
+  }
+  if (status) {
+    conditions.push('status = ?');
+    bindings.push(status);
+  }
+  if (q) {
+    conditions.push('(name LIKE ? OR email LIKE ? OR phone LIKE ? OR user_code LIKE ?)');
+    const like = `%${q}%`;
+    bindings.push(like, like, like, like);
+  }
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
   const result = await env.DB
-    .prepare('SELECT email, name, phone, role, plan, avatar, created_at, login_at FROM users ORDER BY created_at DESC')
-    .all<User>();
+    .prepare(
+      `SELECT email, name, phone, role, plan, avatar, created_at, login_at, user_code, status,
+              (SELECT COUNT(*) FROM user_progress p WHERE p.email = users.email) AS completed_lessons
+       FROM users ${where}
+       ORDER BY created_at DESC`
+    )
+    .bind(...bindings)
+    .all<User & { completed_lessons: number }>();
 
   return json(result.results);
 }
@@ -451,7 +485,7 @@ async function handleUserGet(request: Request, env: Env, email: string) {
   }
 
   const row = await env.DB
-    .prepare('SELECT email, name, phone, role, plan, avatar, created_at, login_at FROM users WHERE email = ?')
+    .prepare('SELECT email, name, phone, role, plan, avatar, created_at, login_at, user_code, status FROM users WHERE email = ?')
     .bind(e)
     .first<User>();
 
@@ -462,22 +496,29 @@ async function handleUserGet(request: Request, env: Env, email: string) {
 async function handleUserUpdate(request: Request, env: Env, email: string) {
   const user = requireAuth(request, env);
   const e = email.toLowerCase();
-  if (user.email !== e && !isAdminEmail(user.email, env)) {
+  const isAdmin = isAdminEmail(user.email, env);
+  if (user.email !== e && !isAdmin) {
     return error('Forbidden', 403);
   }
 
   const body = await getJsonBody<Partial<User>>(request);
-  const { name, phone, avatar } = body;
+  const { name, phone, avatar, status } = body;
+
+  if (status !== undefined) {
+    if (!isAdmin) return error('Chỉ quản trị viên mới có thể đổi trạng thái', 403);
+    if (!['active', 'inactive'].includes(status)) return error('Trạng thái không hợp lệ', 400);
+  }
 
   await env.DB
     .prepare(
       `UPDATE users SET
         name = COALESCE(?, name),
         phone = COALESCE(?, phone),
-        avatar = COALESCE(?, avatar)
+        avatar = COALESCE(?, avatar),
+        status = COALESCE(?, status)
        WHERE email = ?`
     )
-    .bind(name ?? null, phone ?? null, avatar ?? null, e)
+    .bind(name ?? null, phone ?? null, avatar ?? null, status ?? null, e)
     .run();
 
   return json({ ok: true });

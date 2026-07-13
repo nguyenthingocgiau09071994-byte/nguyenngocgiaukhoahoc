@@ -13,6 +13,7 @@
     "cf:db:create": "wrangler d1 create masterclass-db",
     "cf:db:schema": "wrangler d1 execute masterclass-db --remote --file=schema.sql",
     "cf:db:schema:local": "wrangler d1 execute masterclass-db --local --file=schema.sql",
+    "cf:db:migrate:0001": "wrangler d1 execute masterclass-db --remote --config wrangler.api.toml --file=migrations/0001_phase1_student_staff.sql",
     "cf:db:seed": "wrangler d1 execute masterclass-db --remote --file=seed.sql",
     "cf:kv:create": "wrangler kv:namespace create SESSION_KV",
     "cf:pages:deploy": "wrangler pages deploy . --project-name=masterclass-vn",

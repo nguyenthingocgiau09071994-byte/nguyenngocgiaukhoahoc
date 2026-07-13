@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS users (
     avatar TEXT DEFAULT '',
     created_at TEXT DEFAULT (datetime('now', 'localtime')),
     login_at INTEGER DEFAULT 0,
-    password_hash TEXT NOT NULL DEFAULT ''
+    password_hash TEXT NOT NULL DEFAULT '',
+    user_code TEXT,
+    status TEXT DEFAULT 'active' CHECK(status IN ('active', 'inactive'))
 );
 
 -- ============================================================
@@ -67,6 +69,17 @@ CREATE TABLE IF NOT EXISTS content (
     views INTEGER DEFAULT 0,
     likes INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now', 'localtime'))
+);
+
+-- ============================================================
+-- 4b. USER_PROGRESS — Bài học đã hoàn thành (dùng bởi /api/progress)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_progress (
+    email TEXT NOT NULL,
+    lesson_id TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (email, lesson_id),
+    FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
 );
 
 -- ============================================================
