@@ -457,15 +457,20 @@
         event.preventDefault();
         const email = (cloned.querySelector("#loginEmail")?.value || "").trim().toLowerCase();
         const password = cloned.querySelector("#loginPassword")?.value || "";
+        const msgEl = cloned.querySelector("#loginInlineMessage");
+        const showInline = (text, kind) => { if (!msgEl) return; msgEl.textContent = text; msgEl.className = "authInlineMessage " + kind; msgEl.hidden = false; };
 
-        if (!email) { notify("Vui lòng nhập địa chỉ email"); return; }
-        if (!password) { notify("Vui lòng nhập mật khẩu"); return; }
+        if (!email) { showInline("Vui lòng nhập địa chỉ email.", "error"); return; }
+        if (!password) { showInline("Vui lòng nhập mật khẩu.", "error"); return; }
 
         // Wait for the real backend to verify the password before granting a session.
         const ok = await window.cfLogin(email, password);
         if (ok) {
+          showInline("Đăng nhập thành công!", "success");
           document.querySelectorAll(".loginModal, .registerModal").forEach(m => m.classList.remove("open"));
           if (window.refreshAccount) window.refreshAccount();
+        } else {
+          showInline("Email hoặc mật khẩu không đúng. Vui lòng thử lại.", "error");
         }
       };
     }
@@ -483,14 +488,20 @@
         const password = cloned.querySelector("#registerPassword")?.value || "";
         const confirm = cloned.querySelector("#registerConfirm")?.value || "";
 
-        if (!email) { notify("Vui lòng nhập email"); return; }
-        if (password !== confirm) { notify("Mật khẩu xác nhận chưa trùng khớp!"); return; }
+        const msgEl = cloned.querySelector("#registerInlineMessage");
+        const showInline = (text, kind) => { if (!msgEl) return; msgEl.textContent = text; msgEl.className = "authInlineMessage " + kind; msgEl.hidden = false; };
+
+        if (!email) { showInline("Vui lòng nhập email.", "error"); return; }
+        if (password !== confirm) { showInline("Mật khẩu xác nhận chưa trùng khớp!", "error"); return; }
 
         // Wait for the real backend to create the account before granting a session.
         const ok = await window.cfRegister(name, email, phone, password);
         if (ok) {
+          showInline("Tạo tài khoản thành công!", "success");
           document.querySelectorAll(".loginModal, .registerModal").forEach(m => m.classList.remove("open"));
           if (window.refreshAccount) window.refreshAccount();
+        } else {
+          showInline("Không thể tạo tài khoản. Email có thể đã được đăng ký.", "error");
         }
       };
     }

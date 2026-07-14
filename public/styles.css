@@ -13059,3 +13059,24 @@ body .lesson > button {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+
+/* Inline login/register feedback message (shown inside the modal itself) */
+.authInlineMessage {
+  display: block;
+  margin: 4px 0 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.authInlineMessage.error {
+  background: #fde8e8;
+  color: #b42323;
+  border: 1px solid #f3c2c2;
+}
+.authInlineMessage.success {
+  background: #e1f7ec;
+  color: #1a7a4c;
+  border: 1px solid #b9e8cd;
+}
