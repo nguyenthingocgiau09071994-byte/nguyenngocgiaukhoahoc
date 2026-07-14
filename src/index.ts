@@ -7,6 +7,8 @@
  *   POST   /api/auth/login
  *   POST   /api/auth/logout
  *   GET    /api/auth/me
+ *   POST   /api/auth/forgot
+ *   POST   /api/auth/reset
  *
  *   GET    /api/content          (public — all published content)
  *   POST   /api/content          (admin only)
@@ -48,6 +50,7 @@ interface Env {
   JWT_SECRET: string;
   ADMIN_EMAILS: string;
   DEEPSEEK_API_KEY: string;
+  RESEND_API_KEY: string;
 }
 
 interface User {
@@ -254,6 +257,73 @@ async function handleAuthLogout(request: Request, env: Env) {
   const user = requireAuth(request, env);
   // In a real app, you might invalidate the token in KV
   return json({ ok: true });
+}
+
+async function sendResetEmail(env: Env, to: string, name: string, resetUrl: string) {
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: 'Masterclass VN <onboarding@resend.dev>',
+        to: [to],
+        subject: 'Khôi phục mật khẩu Masterclass VN',
+        html: `<p>Chào ${name},</p><p>Bấm vào link bên dưới để đặt lại mật khẩu (link có hiệu lực trong 30 phút):</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Nếu bạn không yêu cầu việc này, hãy bỏ qua email này.</p>`,
+      }),
+    });
+  } catch (err) {
+    console.error('Resend email error:', err);
+  }
+}
+
+async function handleForgotPassword(request: Request, env: Env) {
+  const body = await getJsonBody<{ email: string }>(request);
+  const e = (body.email || '').toLowerCase().trim();
+  if (!e) return error('Email bắt buộc', 400);
+
+  const user = await env.DB
+    .prepare('SELECT email, name FROM users WHERE email = ?')
+    .bind(e)
+    .first<{ email: string; name: string }>();
+
+  if (user) {
+    const token = crypto.randomUUID().replace(/-/g, '');
+    const expiresAt = Date.now() + 30 * 60 * 1000;
+    await env.DB
+      .prepare('INSERT INTO password_resets (token, email, expires_at) VALUES (?, ?, ?)')
+      .bind(token, e, expiresAt)
+      .run();
+    const resetUrl = `https://nguyenngocgiau.com/?reset=${token}`;
+    await sendResetEmail(env, e, user.name || e, resetUrl);
+  }
+
+  // Always return ok — don't leak whether an email is registered
+  return json({ ok: true });
+}
+
+async function handleResetPassword(request: Request, env: Env) {
+  const body = await getJsonBody<{ token: string; password: string }>(request);
+  const { token, password } = body;
+  if (!token || !password) return error('Thiếu thông tin', 400);
+  if (password.length < 6) return error('Mật khẩu tối thiểu 6 ký tự', 400);
+
+  const row = await env.DB
+    .prepare('SELECT email, expires_at FROM password_resets WHERE token = ?')
+    .bind(token)
+    .first<{ email: string; expires_at: number }>();
+
+  if (!row || row.expires_at < Date.now()) {
+    return error('Link khôi phục không hợp lệ hoặc đã hết hạn', 400);
+  }
+
+  const password_hash = hashPassword(password, env.JWT_SECRET);
+  await env.DB.prepare('UPDATE users SET password_hash = ? WHERE email = ?').bind(password_hash, row.email).run();
+  await env.DB.prepare('DELETE FROM password_resets WHERE token = ?').bind(token).run();
+
+  return json({ ok: true, email: row.email });
 }
 
 // ─── Content Routes ─────────────────────────────────────────
@@ -771,6 +841,8 @@ export default {
       if (path === 'auth/login' && method === 'POST') return handleAuthLogin(request, env);
       if (path === 'auth/me' && method === 'GET') return handleAuthMe(request, env);
       if (path === 'auth/logout' && method === 'POST') return handleAuthLogout(request, env);
+      if (path === 'auth/forgot' && method === 'POST') return handleForgotPassword(request, env);
+      if (path === 'auth/reset' && method === 'POST') return handleResetPassword(request, env);
 
       // ── Content ──
       if (path === 'content' && method === 'GET') return handleContentList(request, env);

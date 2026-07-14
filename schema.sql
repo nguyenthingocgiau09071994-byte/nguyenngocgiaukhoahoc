@@ -108,6 +108,17 @@ CREATE TABLE IF NOT EXISTS user_favorites (
 );
 
 -- ============================================================
+-- 6b. PASSWORD_RESETS — Token khôi phục mật khẩu (hết hạn 30 phút)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS password_resets (
+    token TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at TEXT DEFAULT (datetime('now', 'localtime')),
+    FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
+);
+
+-- ============================================================
 -- 7. USER_NOTES — Ghi chú cá nhân
 -- ============================================================
 CREATE TABLE IF NOT EXISTS user_notes (

@@ -530,14 +530,37 @@
       };
     }
 
-    // Forgot password (simplified — no email in CF Workers without SMTP)
+    // Forgot password — request reset email, or submit new password with token
     const forgotForm = document.querySelector("#forgotForm");
     if (forgotForm) {
       const cloned = forgotForm.cloneNode(true);
       forgotForm.parentNode.replaceChild(cloned, forgotForm);
-      cloned.onsubmit = event => {
+      cloned.onsubmit = async event => {
         event.preventDefault();
-        notify('Tính năng khôi phục mật khẩu đang được phát triển. Vui lòng liên hệ admin.');
+        const token = cloned.querySelector('#forgotToken')?.value || '';
+        if (token) {
+          const newPass = cloned.querySelector('#forgotNewPassword')?.value || '';
+          const confirmPass = cloned.querySelector('#forgotConfirmPassword')?.value || '';
+          if (newPass.length < 6) { notify('Mật khẩu tối thiểu 6 ký tự'); return; }
+          if (newPass !== confirmPass) { notify('Mật khẩu xác nhận chưa trùng khớp'); return; }
+          const data = await cfFetch('/auth/reset', 'POST', { token, password: newPass });
+          if (data && data.ok) {
+            document.querySelectorAll('.forgotModal').forEach(m => m.classList.remove('open'));
+            document.querySelector('#loginModal')?.classList.add('open');
+            const loginEmail = document.querySelector('#loginEmail');
+            if (loginEmail && data.email) loginEmail.value = data.email;
+            notify('Đã cập nhật mật khẩu. Hãy đăng nhập lại');
+          } else {
+            notify('Link khôi phục không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.');
+          }
+        } else {
+          const email = (cloned.querySelector('#forgotEmail')?.value || '').trim().toLowerCase();
+          if (!email) { notify('Vui lòng nhập email'); return; }
+          const data = await cfFetch('/auth/forgot', 'POST', { email });
+          document.querySelectorAll('.forgotModal').forEach(m => m.classList.remove('open'));
+          if (data) notify('Nếu email tồn tại, chúng tôi đã gửi link đặt lại mật khẩu. Vui lòng kiểm tra hộp thư.');
+          else notify('Có lỗi xảy ra, vui lòng thử lại sau.');
+        }
       };
     }
   });
