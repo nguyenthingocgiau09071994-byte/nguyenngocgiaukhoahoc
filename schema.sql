@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL DEFAULT '',
     user_code TEXT,
     status TEXT DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
-    permissions TEXT DEFAULT '[]'
+    permissions TEXT DEFAULT '[]',
+    department TEXT DEFAULT ''
 );
 
 -- ============================================================

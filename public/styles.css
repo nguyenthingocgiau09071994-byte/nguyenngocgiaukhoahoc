@@ -5003,7 +5003,6 @@ body:not(.adminPage) main > header .tab.active i {
 
 .memberRow {
   grid-template-columns: minmax(180px, 1.2fr) minmax(190px, 1.2fr) .8fr minmax(220px, 1.25fr) .85fr .75fr !important;
-  min-width: 1080px !important;
 }
 
 .memberMetrics span:nth-child(2) {

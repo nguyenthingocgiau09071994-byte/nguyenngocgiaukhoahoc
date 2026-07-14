@@ -65,6 +65,7 @@ interface User {
   user_code: string;
   status: string;
   permissions: string;
+  department: string;
 }
 
 interface AuthUser {
@@ -516,6 +517,11 @@ async function handleUsersList(request: Request, env: Env) {
   const url = new URL(request.url);
   const role = url.searchParams.get('role');
   const status = url.searchParams.get('status');
+  const plan = url.searchParams.get('plan');
+  const progress = url.searchParams.get('progress'); // 'none' | 'some'
+  const department = url.searchParams.get('department');
+  const dateFrom = url.searchParams.get('dateFrom');
+  const dateTo = url.searchParams.get('dateTo');
   const q = url.searchParams.get('q') || '';
   const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get('pageSize')) || 20));
@@ -530,6 +536,27 @@ async function handleUsersList(request: Request, env: Env) {
     conditions.push('status = ?');
     bindings.push(status);
   }
+  if (plan) {
+    conditions.push('plan = ?');
+    bindings.push(plan);
+  }
+  if (progress === 'none' || progress === 'some') {
+    conditions.push(
+      `(SELECT COUNT(*) FROM user_progress p WHERE p.email = users.email) ${progress === 'none' ? '= 0' : '> 0'}`
+    );
+  }
+  if (department) {
+    conditions.push('department LIKE ?');
+    bindings.push(`%${department}%`);
+  }
+  if (dateFrom) {
+    conditions.push('created_at >= ?');
+    bindings.push(dateFrom);
+  }
+  if (dateTo) {
+    conditions.push('created_at <= ?');
+    bindings.push(`${dateTo} 23:59:59`);
+  }
   if (q) {
     conditions.push('(name LIKE ? OR email LIKE ? OR phone LIKE ? OR user_code LIKE ?)');
     const like = `%${q}%`;
@@ -537,14 +564,34 @@ async function handleUsersList(request: Request, env: Env) {
   }
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const countRow = await env.DB
-    .prepare(`SELECT COUNT(*) AS total FROM users ${where}`)
-    .bind(...bindings)
-    .first<{ total: number }>();
+  async function countWith(extraCond?: string): Promise<number> {
+    const conds = extraCond ? [...conditions, extraCond] : conditions;
+    const w = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
+    const row = await env.DB.prepare(`SELECT COUNT(*) AS c FROM users ${w}`).bind(...bindings).first<{ c: number }>();
+    return row?.c || 0;
+  }
+
+  const [total, activeCount, studyingCount, notStartedCount, withStudentsCount, pendingTotalRow] = await Promise.all([
+    countWith(),
+    countWith(`status != 'inactive'`),
+    countWith(`(SELECT COUNT(*) FROM user_progress p WHERE p.email = users.email) > 0`),
+    countWith(`(SELECT COUNT(*) FROM user_progress p WHERE p.email = users.email) = 0`),
+    countWith(`EXISTS (SELECT 1 FROM student_staff_assignments a WHERE a.staff_email = users.email AND a.status = 'active')`),
+    env.DB
+      .prepare(
+        `SELECT COALESCE(SUM(
+           (SELECT COUNT(*) FROM submissions s WHERE s.status = 'pending' AND s.student_email IN (
+             SELECT student_email FROM student_staff_assignments a2 WHERE a2.staff_email = users.email AND a2.status = 'active'
+           ))
+         ), 0) AS c FROM users ${where}`
+      )
+      .bind(...bindings)
+      .first<{ c: number }>(),
+  ]);
 
   const result = await env.DB
     .prepare(
-      `SELECT email, name, phone, role, plan, avatar, created_at, login_at, user_code, status, permissions,
+      `SELECT email, name, phone, role, plan, avatar, created_at, login_at, user_code, status, permissions, department,
               (SELECT COUNT(*) FROM user_progress p WHERE p.email = users.email) AS completed_lessons,
               (SELECT COUNT(*) FROM student_staff_assignments a WHERE a.student_email = users.email AND a.status = 'active') AS assigned_staff_count,
               (SELECT COUNT(*) FROM student_staff_assignments a WHERE a.staff_email = users.email AND a.status = 'active') AS assigned_student_count,
@@ -558,7 +605,17 @@ async function handleUsersList(request: Request, env: Env) {
     .bind(...bindings, pageSize, (page - 1) * pageSize)
     .all<User & { completed_lessons: number }>();
 
-  return json({ items: result.results, total: countRow?.total || 0, page, pageSize });
+  return json({
+    items: result.results,
+    total,
+    page,
+    pageSize,
+    activeCount,
+    studyingCount,
+    notStartedCount,
+    withStudentsCount,
+    pendingTotal: pendingTotalRow?.c || 0,
+  });
 }
 
 async function handleUserGet(request: Request, env: Env, email: string) {
@@ -569,9 +626,13 @@ async function handleUserGet(request: Request, env: Env, email: string) {
   }
 
   const row = await env.DB
-    .prepare('SELECT email, name, phone, role, plan, avatar, created_at, login_at, user_code, status FROM users WHERE email = ?')
+    .prepare(
+      `SELECT email, name, phone, role, plan, avatar, created_at, login_at, user_code, status, permissions, department,
+              (SELECT COUNT(*) FROM user_progress p WHERE p.email = users.email) AS completed_lessons
+       FROM users WHERE email = ?`
+    )
     .bind(e)
-    .first<User>();
+    .first<User & { completed_lessons: number }>();
 
   if (!row) return error('User not found', 404);
   return json(row);
@@ -586,7 +647,7 @@ async function handleUserUpdate(request: Request, env: Env, email: string) {
   }
 
   const body = await getJsonBody<Partial<User>>(request);
-  const { name, phone, avatar, status } = body;
+  const { name, phone, avatar, status, department } = body;
 
   if (status !== undefined) {
     if (!isAdmin) return error('Chỉ quản trị viên mới có thể đổi trạng thái', 403);
@@ -599,10 +660,11 @@ async function handleUserUpdate(request: Request, env: Env, email: string) {
         name = COALESCE(?, name),
         phone = COALESCE(?, phone),
         avatar = COALESCE(?, avatar),
-        status = COALESCE(?, status)
+        status = COALESCE(?, status),
+        department = COALESCE(?, department)
        WHERE email = ?`
     )
-    .bind(name ?? null, phone ?? null, avatar ?? null, status ?? null, e)
+    .bind(name ?? null, phone ?? null, avatar ?? null, status ?? null, department ?? null, e)
     .run();
 
   return json({ ok: true });
@@ -628,7 +690,7 @@ function generateTempPassword(): string {
 
 async function handleAdminCreateUser(request: Request, env: Env) {
   requireAdmin(request, env);
-  const body = await getJsonBody<{ name: string; email: string; phone: string; role: string }>(request);
+  const body = await getJsonBody<{ name: string; email: string; phone: string; role: string; department?: string }>(request);
   const e = (body.email || '').toLowerCase().trim();
   if (!e) return error('Email bắt buộc', 400);
   if (!['student', 'admin'].includes(body.role)) return error('Vai trò không hợp lệ', 400);
@@ -645,10 +707,10 @@ async function handleAdminCreateUser(request: Request, env: Env) {
 
   await env.DB
     .prepare(
-      `INSERT INTO users (email, name, phone, role, plan, password_hash, user_code, status, created_at, login_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', datetime('now', 'localtime'), 0)`
+      `INSERT INTO users (email, name, phone, role, plan, password_hash, user_code, status, department, created_at, login_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, datetime('now', 'localtime'), 0)`
     )
-    .bind(e, body.name || e.split('@')[0], body.phone || '', body.role, plan, password_hash, userCode)
+    .bind(e, body.name || e.split('@')[0], body.phone || '', body.role, plan, password_hash, userCode, body.department || '')
     .run();
 
   await env.DB.prepare('INSERT INTO user_access (email, plan) VALUES (?, ?)').bind(e, plan).run();

@@ -88,3 +88,42 @@ function confirmAction(message) {
     modal.querySelector('.acConfirmShade').onclick = () => { cleanup(); resolve(false); };
   });
 }
+
+// Disable 1 nút trong lúc đang gửi dữ liệu, tự bật lại khi xong (kể cả khi lỗi).
+async function withBusy(button, fn) {
+  if (!button) return fn();
+  const prevDisabled = button.disabled;
+  button.disabled = true;
+  try {
+    return await fn();
+  } finally {
+    button.disabled = prevDisabled;
+  }
+}
+
+function renderSearchInput(opts) {
+  opts = opts || {};
+  return `<input type="text" id="${opts.id}" placeholder="${escHtml(opts.placeholder || 'Tìm kiếm...')}">`;
+}
+
+// filters: [{ type:'select', id, placeholder, options:[{value,label}] } | { type:'text', id, placeholder } | { type:'date', id, placeholder }]
+function renderFilterBar(filters) {
+  return (filters || []).map(f => {
+    if (f.type === 'select') {
+      const opts = (f.options || []).map(o => `<option value="${escHtml(o.value)}">${escHtml(o.label)}</option>`).join('');
+      return `<select id="${f.id}"><option value="">${escHtml(f.placeholder || 'Tất cả')}</option>${opts}</select>`;
+    }
+    if (f.type === 'date') {
+      return `<input type="date" id="${f.id}" title="${escHtml(f.placeholder || '')}">`;
+    }
+    return `<input type="text" id="${f.id}" placeholder="${escHtml(f.placeholder || '')}">`;
+  }).join('');
+}
+
+// Danh sách quyền dạng checkbox — permissions: [{key,label}], granted: string[]
+function renderPermissionMatrix(permissions, granted) {
+  granted = granted || [];
+  return permissions.map(p =>
+    `<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:400;"><input type="checkbox" data-perm="${p.key}" ${granted.includes(p.key) ? 'checked' : ''} style="width:auto;margin:0;"> ${escHtml(p.label)}</label>`
+  ).join('');
+}

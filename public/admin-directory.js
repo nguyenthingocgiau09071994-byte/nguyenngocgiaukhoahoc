@@ -37,8 +37,6 @@
     const [datePart, timePart] = String(sqliteDate).split(' ');
     return formatDate(datePart) + (timePart ? ' · ' + timePart.slice(0, 5) : '');
   }
-  function progressTier(count) { return count > 0 ? 'some' : 'none'; }
-
   async function adminApiFetch(path, opts = {}) {
     const token = localStorage.getItem('academy_cf_token') || '';
     const res = await fetch((window.CF_API_BASE || '') + '/api' + path, {
@@ -83,7 +81,7 @@
     return `<div class="memberRow">
       <span style="display:flex;align-items:center;gap:9px;">${renderUserAvatar(u)}<span><b>${escHtml(u.name || u.email)}</b><small>${escHtml(u.user_code || '—')}</small></span></span>
       <span><b>${escHtml(u.email)}</b><small>${escHtml(u.phone || 'Chưa cập nhật')}</small></span>
-      <span>Quản trị viên</span>
+      <span>Quản trị viên${u.department ? '<small>' + escHtml(u.department) + '</small>' : ''}</span>
       <span>${escHtml(workload)}</span>
       <span>${renderStatusBadge(u.status)}</span>
       <span>${formatDate(u.created_at)}</span>
@@ -102,30 +100,31 @@
     const course = $('#studentCourseFilter')?.value || '';
     const status = $('#studentStatusFilter')?.value || '';
     const progress = $('#studentProgressFilter')?.value || '';
+    const dateFrom = $('#studentDateFrom')?.value || '';
+    const dateTo = $('#studentDateTo')?.value || '';
+    const hasFilter = !!(q || course || status || progress || dateFrom || dateTo);
 
     try {
       const params = new URLSearchParams({ role: 'student', page: String(studentPage), pageSize: String(PAGE_SIZE) });
       if (q) params.set('q', q);
       if (status) params.set('status', status);
+      if (course) params.set('plan', course);
+      if (progress) params.set('progress', progress);
+      if (dateFrom) params.set('dateFrom', dateFrom);
+      if (dateTo) params.set('dateTo', dateTo);
       const data = await adminApiFetch('/users?' + params.toString());
       lastStudents = data.items || [];
 
-      const active = lastStudents.filter(u => u.status !== 'inactive').length;
-      const studying = lastStudents.filter(u => (u.completed_lessons || 0) > 0).length;
-      const notStarted = lastStudents.length - studying;
       $('#studentStatsRow').innerHTML = [
-        renderStatCard({ icon: '👥', label: 'Tổng học viên (trang này)', value: data.total, accent: '#0d7f74' }),
-        renderStatCard({ icon: '✓', label: 'Đang hoạt động', value: active, accent: '#16a34a' }),
-        renderStatCard({ icon: '▶', label: 'Đang học', value: studying, accent: '#e7b84f' }),
-        renderStatCard({ icon: '◇', label: 'Chưa học', value: notStarted, accent: '#8b8f9a' }),
+        renderStatCard({ icon: '👥', label: 'Tổng học viên', value: data.total, accent: '#0d7f74' }),
+        renderStatCard({ icon: '✓', label: 'Đang hoạt động', value: data.activeCount, accent: '#16a34a' }),
+        renderStatCard({ icon: '▶', label: 'Đang học', value: data.studyingCount, accent: '#e7b84f' }),
+        renderStatCard({ icon: '◇', label: 'Chưa học', value: data.notStartedCount, accent: '#8b8f9a' }),
       ].join('');
 
-      const filtered = lastStudents.filter(u => {
-        if (course && u.plan !== course) return false;
-        if (progress && progressTier(u.completed_lessons) !== progress) return false;
-        return true;
-      });
-      list.innerHTML = filtered.length ? filtered.map(studentRowHtml).join('') : renderEmptyState('Chưa có học viên phù hợp.');
+      list.innerHTML = lastStudents.length
+        ? lastStudents.map(studentRowHtml).join('')
+        : renderEmptyState(hasFilter ? 'Không tìm thấy học viên phù hợp với bộ lọc.' : 'Chưa có học viên nào trong hệ thống.');
 
       const totalPages = Math.max(1, Math.ceil((data.total || 0) / PAGE_SIZE));
       $('#studentPaginationSlot').innerHTML = renderPagination(studentPage, totalPages, 'data-student-page');
@@ -143,24 +142,28 @@
     if (!list) return;
     list.innerHTML = renderLoadingSkeleton(4);
     const q = term ?? $('#staffSearch')?.value ?? '';
+    const status = $('#staffStatusFilter')?.value || '';
+    const department = $('#staffDepartmentFilter')?.value || '';
+    const hasFilter = !!(q || status || department);
 
     try {
       const params = new URLSearchParams({ role: 'admin', page: String(staffPage), pageSize: String(PAGE_SIZE) });
       if (q) params.set('q', q);
+      if (status) params.set('status', status);
+      if (department) params.set('department', department);
       const data = await adminApiFetch('/users?' + params.toString());
       lastStaff = data.items || [];
 
-      const active = lastStaff.filter(u => u.status !== 'inactive').length;
-      const withStudents = lastStaff.filter(u => (u.assigned_student_count || 0) > 0).length;
-      const withPending = lastStaff.reduce((sum, u) => sum + (u.pending_grading_count || 0), 0);
       $('#staffStatsRow').innerHTML = [
         renderStatCard({ icon: '👤', label: 'Tổng nhân viên', value: data.total, accent: '#0d7f74' }),
-        renderStatCard({ icon: '✓', label: 'Đang hoạt động', value: active, accent: '#16a34a' }),
-        renderStatCard({ icon: '♙', label: 'Có học viên phụ trách', value: withStudents, accent: '#7c3aed' }),
-        renderStatCard({ icon: '✎', label: 'Bài chờ chấm', value: withPending, accent: '#ef846f' }),
+        renderStatCard({ icon: '✓', label: 'Đang hoạt động', value: data.activeCount, accent: '#16a34a' }),
+        renderStatCard({ icon: '♙', label: 'Có học viên phụ trách', value: data.withStudentsCount, accent: '#7c3aed' }),
+        renderStatCard({ icon: '✎', label: 'Bài chờ chấm', value: data.pendingTotal, accent: '#ef846f' }),
       ].join('');
 
-      list.innerHTML = lastStaff.length ? lastStaff.map(staffRowHtml).join('') : renderEmptyState('Chưa có tài khoản quản trị viên.');
+      list.innerHTML = lastStaff.length
+        ? lastStaff.map(staffRowHtml).join('')
+        : renderEmptyState(hasFilter ? 'Không tìm thấy nhân viên phù hợp với bộ lọc.' : 'Chưa có tài khoản quản trị viên.');
       const totalPages = Math.max(1, Math.ceil((data.total || 0) / PAGE_SIZE));
       $('#staffPaginationSlot').innerHTML = renderPagination(staffPage, totalPages, 'data-staff-page');
     } catch (err) {
@@ -195,8 +198,15 @@
   }
 
   async function openDetail(email, kind) {
-    const user = findUser(email, kind);
-    if (!user) return;
+    let user = findUser(email, kind);
+    if (!user) {
+      try {
+        user = await adminApiFetch('/users/' + encodeURIComponent(email));
+      } catch (err) {
+        toast('Không tìm thấy tài khoản ' + email);
+        return;
+      }
+    }
     detailEmail = email;
     detailKind = kind;
     detailUser = user;
@@ -306,10 +316,12 @@
         <div class="acRow"><span>Mã nhân viên</span><b>${escHtml(user.user_code || '—')}</b></div>
         <div class="acRow"><span>Họ và tên</span><b>${escHtml(user.name || '—')}</b></div>
         <div class="acRow"><span>Số điện thoại</span><b>${escHtml(user.phone || 'Chưa cập nhật')}</b></div>
+        <div class="acRow"><span>Bộ phận</span><b>${escHtml(user.department || 'Chưa cập nhật')}</b></div>
         <div class="acRow"><span>Trạng thái</span>${renderStatusBadge(user.status)}</div>
         <div class="acRow"><span>Ngày tạo tài khoản</span><b>${formatDate(user.created_at)}</b></div>
         <label>Họ và tên<input id="dOverviewName" value="${escHtml(user.name || '')}"></label>
         <label>Số điện thoại<input id="dOverviewPhone" value="${escHtml(user.phone || '')}"></label>
+        <label>Bộ phận<input id="dOverviewDepartment" value="${escHtml(user.department || '')}"></label>
         <div class="acSaveRow"><button type="button" id="dOverviewSave">Lưu thay đổi</button></div>`;
     }
     if (key === 'assigned') {
@@ -333,7 +345,7 @@
     if (key === 'permissions') {
       let granted = [];
       try { granted = JSON.parse(user.permissions || '[]'); } catch {}
-      const rows = PERMISSIONS.map(p => `<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:400;"><input type="checkbox" data-perm="${p.key}" ${granted.includes(p.key) ? 'checked' : ''} style="width:auto;margin:0;"> ${escHtml(p.label)}</label>`).join('');
+      const rows = renderPermissionMatrix(PERMISSIONS, granted);
       return `${rows}<div class="acSaveRow"><button type="button" id="dPermSave">Lưu phân quyền</button></div>`;
     }
     if (key === 'activity') {
@@ -368,45 +380,51 @@
     if (toggleBtn) {
       const ok = await confirmAction(toggleBtn.dataset.nextStatus === 'inactive' ? 'Khóa tài khoản này? Học viên/nhân viên sẽ không thể đăng nhập.' : 'Mở khóa tài khoản này?');
       if (!ok) return;
-      try {
-        await adminApiFetch(`/users/${encodeURIComponent(detailEmail)}`, { method: 'PUT', body: { status: toggleBtn.dataset.nextStatus } });
-        toast('Đã cập nhật trạng thái tài khoản');
-        closeDetail();
-        detailKind === 'staff' ? renderStaffDirectory() : renderStudentDirectory();
-      } catch (err) { toast('Lỗi: ' + err.message); }
-      return;
+      return withBusy(toggleBtn, async () => {
+        try {
+          await adminApiFetch(`/users/${encodeURIComponent(detailEmail)}`, { method: 'PUT', body: { status: toggleBtn.dataset.nextStatus } });
+          toast('Đã cập nhật trạng thái tài khoản');
+          closeDetail();
+          detailKind === 'staff' ? renderStaffDirectory() : renderStudentDirectory();
+        } catch (err) { toast('Lỗi: ' + err.message); }
+      });
     }
 
     const overviewSave = e.target.closest('#dOverviewSave');
     if (overviewSave) {
-      try {
-        await adminApiFetch(`/users/${encodeURIComponent(detailEmail)}`, { method: 'PUT', body: { name: $('#dOverviewName').value.trim(), phone: $('#dOverviewPhone').value.trim() } });
-        toast('Đã lưu thông tin');
-        detailKind === 'staff' ? renderStaffDirectory() : renderStudentDirectory();
-      } catch (err) { toast('Lỗi: ' + err.message); }
-      return;
+      return withBusy(overviewSave, async () => {
+        try {
+          const body = { name: $('#dOverviewName').value.trim(), phone: $('#dOverviewPhone').value.trim() };
+          if (detailKind === 'staff') body.department = $('#dOverviewDepartment')?.value.trim() || '';
+          await adminApiFetch(`/users/${encodeURIComponent(detailEmail)}`, { method: 'PUT', body });
+          toast('Đã lưu thông tin');
+          detailKind === 'staff' ? renderStaffDirectory() : renderStudentDirectory();
+        } catch (err) { toast('Lỗi: ' + err.message); }
+      });
     }
 
     const planSave = e.target.closest('#dPlanSave');
     if (planSave) {
-      try {
-        await adminApiFetch(`/access/${encodeURIComponent(detailEmail)}`, { method: 'PUT', body: { plan: $('#dPlan').value } });
-        toast('Đã cập nhật khóa học');
-        renderStudentDirectory();
-      } catch (err) { toast('Lỗi: ' + err.message); }
-      return;
+      return withBusy(planSave, async () => {
+        try {
+          await adminApiFetch(`/access/${encodeURIComponent(detailEmail)}`, { method: 'PUT', body: { plan: $('#dPlan').value } });
+          toast('Đã cập nhật khóa học');
+          renderStudentDirectory();
+        } catch (err) { toast('Lỗi: ' + err.message); }
+      });
     }
 
     const careSave = e.target.closest('#dCareSave');
     if (careSave) {
       const content = $('#dCareText')?.value.trim();
       if (!content) { toast('Vui lòng nhập nội dung ghi chú'); return; }
-      try {
-        await adminApiFetch('/care-notes', { method: 'POST', body: { studentEmail: detailKind === 'staff' ? null : detailEmail, type: 'note', content } });
-        toast('Đã lưu ghi chú');
-        switchDetailTab('care');
-      } catch (err) { toast('Lỗi: ' + err.message); }
-      return;
+      return withBusy(careSave, async () => {
+        try {
+          await adminApiFetch('/care-notes', { method: 'POST', body: { studentEmail: detailKind === 'staff' ? null : detailEmail, type: 'note', content } });
+          toast('Đã lưu ghi chú');
+          switchDetailTab('care');
+        } catch (err) { toast('Lỗi: ' + err.message); }
+      });
     }
 
     const gradeBtn = e.target.closest('[data-grade-submit]');
@@ -415,47 +433,51 @@
       const input = document.querySelector(`[data-grade-input="${id}"]`);
       const grade = input?.value.trim();
       if (!grade) { toast('Vui lòng nhập điểm/nhận xét'); return; }
-      try {
-        await adminApiFetch(`/submissions/${id}`, { method: 'PUT', body: { grade, feedback: grade } });
-        toast('Đã chấm bài');
-        switchDetailTab('submissions');
-      } catch (err) { toast('Lỗi: ' + err.message); }
-      return;
+      return withBusy(gradeBtn, async () => {
+        try {
+          await adminApiFetch(`/submissions/${id}`, { method: 'PUT', body: { grade, feedback: grade } });
+          toast('Đã chấm bài');
+          switchDetailTab('submissions');
+        } catch (err) { toast('Lỗi: ' + err.message); }
+      });
     }
 
     const assignSave = e.target.closest('#dAssignSave');
     if (assignSave) {
       const email = $('#dAssignEmail')?.value.trim().toLowerCase();
       if (!email) { toast('Vui lòng nhập email học viên'); return; }
-      try {
-        await adminApiFetch('/assignments', { method: 'POST', body: { studentEmail: email, staffEmail: detailEmail } });
-        toast('Đã gán học viên');
-        switchDetailTab('assigned');
-      } catch (err) { toast('Lỗi: ' + err.message); }
-      return;
+      return withBusy(assignSave, async () => {
+        try {
+          await adminApiFetch('/assignments', { method: 'POST', body: { studentEmail: email, staffEmail: detailEmail } });
+          toast('Đã gán học viên');
+          switchDetailTab('assigned');
+        } catch (err) { toast('Lỗi: ' + err.message); }
+      });
     }
 
     const unassignBtn = e.target.closest('[data-unassign]');
     if (unassignBtn) {
       const ok = await confirmAction('Hủy gán học viên này khỏi nhân viên phụ trách?');
       if (!ok) return;
-      try {
-        await adminApiFetch(`/assignments/${unassignBtn.dataset.unassign}`, { method: 'DELETE' });
-        toast('Đã hủy gán');
-        switchDetailTab('assigned');
-      } catch (err) { toast('Lỗi: ' + err.message); }
-      return;
+      return withBusy(unassignBtn, async () => {
+        try {
+          await adminApiFetch(`/assignments/${unassignBtn.dataset.unassign}`, { method: 'DELETE' });
+          toast('Đã hủy gán');
+          switchDetailTab('assigned');
+        } catch (err) { toast('Lỗi: ' + err.message); }
+      });
     }
 
     const permSave = e.target.closest('#dPermSave');
     if (permSave) {
       const checked = Array.from(document.querySelectorAll('[data-perm]:checked')).map(el => el.dataset.perm);
-      try {
-        await adminApiFetch(`/users/${encodeURIComponent(detailEmail)}/permissions`, { method: 'PUT', body: { permissions: checked } });
-        toast('Đã lưu phân quyền');
-        renderStaffDirectory();
-      } catch (err) { toast('Lỗi: ' + err.message); }
-      return;
+      return withBusy(permSave, async () => {
+        try {
+          await adminApiFetch(`/users/${encodeURIComponent(detailEmail)}/permissions`, { method: 'PUT', body: { permissions: checked } });
+          toast('Đã lưu phân quyền');
+          renderStaffDirectory();
+        } catch (err) { toast('Lỗi: ' + err.message); }
+      });
     }
 
     const addUserBtn = e.target.closest('[data-add-user]');
@@ -465,6 +487,7 @@
       $('#createUserRole').value = role;
       $('#createUserKind').textContent = role === 'admin' ? 'NHÂN VIÊN' : 'HỌC VIÊN';
       $('#createUserTitle').textContent = role === 'admin' ? 'Thêm nhân viên mới' : 'Thêm học viên mới';
+      $('#createUserDepartmentField').style.display = role === 'admin' ? '' : 'none';
       $('#createUserModal').classList.add('open');
       return;
     }
@@ -476,17 +499,26 @@
     if (!form) return;
     e.preventDefault();
     const role = $('#createUserRole').value;
-    try {
-      const data = await adminApiFetch('/admin/create-user', {
-        method: 'POST',
-        body: { name: $('#createUserName').value.trim(), email: $('#createUserEmail').value.trim().toLowerCase(), phone: $('#createUserPhone').value.trim(), role },
-      });
-      $('#createUserModal').classList.remove('open');
-      toast(`Đã tạo tài khoản. Mã: ${data.userCode} — mật khẩu tạm: ${data.tempPassword} (gửi riêng cho ${role === 'admin' ? 'nhân viên' : 'học viên'})`);
-      role === 'admin' ? renderStaffDirectory() : renderStudentDirectory();
-    } catch (err) {
-      toast('Lỗi: ' + err.message);
-    }
+    const submitBtn = form.querySelector('button[type="submit"], button.primary');
+    return withBusy(submitBtn, async () => {
+      try {
+        const data = await adminApiFetch('/admin/create-user', {
+          method: 'POST',
+          body: {
+            name: $('#createUserName').value.trim(),
+            email: $('#createUserEmail').value.trim().toLowerCase(),
+            phone: $('#createUserPhone').value.trim(),
+            department: $('#createUserDepartment')?.value.trim() || '',
+            role,
+          },
+        });
+        $('#createUserModal').classList.remove('open');
+        toast(`Đã tạo tài khoản. Mã: ${data.userCode} — mật khẩu tạm: ${data.tempPassword} (gửi riêng cho ${role === 'admin' ? 'nhân viên' : 'học viên'})`);
+        role === 'admin' ? renderStaffDirectory() : renderStudentDirectory();
+      } catch (err) {
+        toast('Lỗi: ' + err.message);
+      }
+    });
   });
 
   function bindFilters() {
@@ -494,10 +526,22 @@
     if (memberSearch) memberSearch.oninput = e => { studentPage = 1; renderStudentDirectory(e.target.value); };
     const staffSearch = $('#staffSearch');
     if (staffSearch) staffSearch.oninput = e => { staffPage = 1; renderStaffDirectory(e.target.value); };
-    ['#studentCourseFilter', '#studentStatusFilter', '#studentProgressFilter'].forEach(sel => {
+    ['#studentCourseFilter', '#studentStatusFilter', '#studentProgressFilter', '#studentDateFrom', '#studentDateTo'].forEach(sel => {
       const el = $(sel);
       if (el) el.onchange = () => { studentPage = 1; renderStudentDirectory(); };
     });
+    const staffStatusFilter = $('#staffStatusFilter');
+    if (staffStatusFilter) staffStatusFilter.onchange = () => { staffPage = 1; renderStaffDirectory(); };
+    const staffDepartmentFilter = $('#staffDepartmentFilter');
+    if (staffDepartmentFilter) staffDepartmentFilter.oninput = () => { staffPage = 1; renderStaffDirectory(); };
+  }
+
+  function openDetailFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const studentEmail = params.get('student');
+    const staffEmail = params.get('staff');
+    if (studentEmail) openDetail(studentEmail, 'student');
+    else if (staffEmail) openDetail(staffEmail, 'staff');
   }
 
   window.renderStudentDirectory = renderStudentDirectory;
@@ -507,5 +551,6 @@
     bindFilters();
     renderStudentDirectory();
     renderStaffDirectory();
+    openDetailFromUrl();
   }, 300);
 })();
