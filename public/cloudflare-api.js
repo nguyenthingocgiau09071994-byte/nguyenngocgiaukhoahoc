@@ -459,29 +459,14 @@
         const password = cloned.querySelector("#loginPassword")?.value || "";
 
         if (!email) { notify("Vui lòng nhập địa chỉ email"); return; }
+        if (!password) { notify("Vui lòng nhập mật khẩu"); return; }
 
-        // Optimistic local login
-        const isKnownAdmin = isAdminEmail(email);
-        const usersMap = safeJson(localStorage.getItem('academy_users') || '{}', {});
-        const localUser = usersMap[email] || {};
-        const profile = {
-          name: localUser.name || email.split('@')[0],
-          email, phone: localUser.phone || '',
-          role: isKnownAdmin ? 'admin' : (localUser.role || 'student'),
-          plan: isKnownAdmin ? 'pro' : (localUser.plan || 'starter'),
-          loginAt: Date.now()
-        };
-
-        setSession(profile);
-        usersMap[email] = profile;
-        originalSetItem('academy_users', JSON.stringify(usersMap));
-        document.querySelectorAll(".loginModal, .registerModal").forEach(m => m.classList.remove("open"));
-        if (window.refreshAccount) window.refreshAccount();
-        notify('✨ Đăng nhập thành công! Chào mừng ' + profile.name);
-        if (profile.role === 'admin' && document.body.classList.contains("adminPage")) unlockAdminPage();
-
-        // Background sync
-        if (password) window.cfLogin(email, password);
+        // Wait for the real backend to verify the password before granting a session.
+        const ok = await window.cfLogin(email, password);
+        if (ok) {
+          document.querySelectorAll(".loginModal, .registerModal").forEach(m => m.classList.remove("open"));
+          if (window.refreshAccount) window.refreshAccount();
+        }
       };
     }
 
@@ -501,32 +486,12 @@
         if (!email) { notify("Vui lòng nhập email"); return; }
         if (password !== confirm) { notify("Mật khẩu xác nhận chưa trùng khớp!"); return; }
 
-        const isKnownAdmin = isAdminEmail(email);
-        const profile = {
-          name: name || email.split('@')[0],
-          email, phone,
-          role: isKnownAdmin ? 'admin' : 'student',
-          plan: isKnownAdmin ? 'pro' : 'starter',
-          createdAt: new Date().toLocaleDateString('vi-VN'),
-          loginAt: Date.now()
-        };
-
-        // Optimistic
-        const usersMap = safeJson(localStorage.getItem('academy_users') || '{}', {});
-        usersMap[email] = profile;
-        originalSetItem('academy_users', JSON.stringify(usersMap));
-        const membersList = safeJson(localStorage.getItem('academy_members') || '[]', []);
-        if (!membersList.some(m => m.email === email)) {
-          membersList.push({ name: profile.name, email, phone, plan: profile.plan, status: 'active', createdAt: profile.createdAt });
-          originalSetItem('academy_members', JSON.stringify(membersList));
+        // Wait for the real backend to create the account before granting a session.
+        const ok = await window.cfRegister(name, email, phone, password);
+        if (ok) {
+          document.querySelectorAll(".loginModal, .registerModal").forEach(m => m.classList.remove("open"));
+          if (window.refreshAccount) window.refreshAccount();
         }
-        setSession(profile);
-        document.querySelectorAll(".loginModal, .registerModal").forEach(m => m.classList.remove("open"));
-        if (window.refreshAccount) window.refreshAccount();
-        notify('🎉 Đăng ký thành công! Chào mừng ' + profile.name);
-
-        // Background sync
-        window.cfRegister(name, email, phone, password);
       };
     }
 
