@@ -13080,3 +13080,329 @@ body .lesson > button {
   color: #1a7a4c;
   border: 1px solid #b9e8cd;
 }
+
+/* ================= Admin shared components (admin-components.js) ================= */
+.acStatCard {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: #fff;
+  border: 1px solid #dceceb;
+  border-radius: 14px;
+  padding: 16px;
+}
+.acStatIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.acStatCard small {
+  display: block;
+  font-size: 10.5px;
+  color: #6b8082;
+  font-weight: 700;
+}
+.acStatCard b {
+  display: block;
+  font-size: 21px;
+  margin-top: 2px;
+  color: #12373b;
+}
+.acProgressBar {
+  height: 6px;
+  border-radius: 99px;
+  background: #e7edec;
+  overflow: hidden;
+}
+.acProgressBar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #105f68, #3a9295);
+  border-radius: 99px;
+}
+.acEmptyState,
+.acErrorState {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b8082;
+}
+.acEmptyState span,
+.acErrorState span {
+  display: block;
+  font-size: 26px;
+  margin-bottom: 8px;
+  opacity: .6;
+}
+.acErrorState button {
+  margin-top: 10px;
+  border: 1px solid #dceceb;
+  background: #fff;
+  border-radius: 9px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #105f68;
+  cursor: pointer;
+}
+.acSkeletonWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 0;
+}
+.acSkeletonRow {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 4px;
+}
+.acSkeletonRow i {
+  display: block;
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #eef4f3 25%, #e2ebea 37%, #eef4f3 63%);
+  background-size: 400% 100%;
+  animation: acSkeletonShine 1.4s ease infinite;
+}
+.acSkeletonRow i:first-child {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+@keyframes acSkeletonShine {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+.acPagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px 0 4px;
+  font-size: 11.5px;
+  color: #6b8082;
+}
+.acPagination button {
+  border: 1px solid #dceceb;
+  background: #fff;
+  border-radius: 9px;
+  padding: 7px 12px;
+  font-weight: 700;
+  color: #105f68;
+  cursor: pointer;
+}
+.acPagination button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+.acDetailTabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #dceceb;
+}
+.acDetailTabs button {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  padding: 10px 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #6b8082;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.acDetailTabs button.active {
+  color: #105f68;
+  border-bottom-color: #105f68;
+}
+.acConfirmModal {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  display: none;
+  place-items: center;
+  padding: 20px;
+}
+.acConfirmModal.open { display: grid; }
+.acConfirmShade {
+  position: absolute;
+  inset: 0;
+  background: #06272ad0;
+  backdrop-filter: blur(6px);
+}
+.acConfirmCard {
+  position: relative;
+  width: min(380px, 92vw);
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 30px 90px #001d2266;
+}
+.acConfirmCard p {
+  font-size: 13px;
+  color: #12373b;
+  line-height: 1.6;
+  margin: 0;
+}
+.acConfirmCard footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.acConfirmCard footer button {
+  border: 1px solid #dceceb;
+  background: #fff;
+  border-radius: 9px;
+  padding: 9px 15px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.acConfirmCard footer button.danger {
+  background: #e53e3e;
+  border-color: #e53e3e;
+  color: #fff;
+}
+
+.acStatsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 13px;
+  margin-bottom: 17px;
+}
+@media (max-width: 900px) {
+  .acStatsRow { grid-template-columns: 1fr 1fr; }
+}
+
+/* Detail modal (student/staff), tab-based */
+.acDetailModal .acDetailCard {
+  position: relative;
+  width: min(760px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 22px;
+  padding: 28px;
+}
+.acDetailClose {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: #edf6f5;
+  color: #105f68;
+  font-size: 19px;
+  cursor: pointer;
+}
+.acDetailHead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.acDetailAvatar img,
+.acDetailAvatar span {
+  width: 56px !important;
+  height: 56px !important;
+  font-size: 18px !important;
+}
+.acDetailHeadInfo { flex: 1; min-width: 0; }
+.acDetailHeadInfo span {
+  display: block;
+  font-size: 9px;
+  color: #3a9295;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+.acDetailHeadInfo h2 { margin: 3px 0; font-size: 21px; }
+.acDetailHeadInfo p { margin: 0; font-size: 11px; color: #6b8082; }
+.acDetailHead > button.danger {
+  flex-shrink: 0;
+  border: 1px solid #f3c2c2;
+  background: #fde8e8;
+  color: #b42323;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.acDetailTabContent { min-height: 160px; }
+.acDetailTabContent label {
+  display: block;
+  margin-top: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #315e64;
+}
+.acDetailTabContent input,
+.acDetailTabContent select,
+.acDetailTabContent textarea {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 10px 12px;
+  border: 1px solid #dceceb;
+  border-radius: 9px;
+}
+.acDetailTabContent .acRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eef4f3;
+  font-size: 12px;
+}
+.acDetailTabContent .acRow:last-child { border-bottom: 0; }
+.acDetailTabContent .acSaveRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.acDetailTabContent .acSaveRow button {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #105f68;
+  color: #fff;
+}
+.acTimelineItem {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eef4f3;
+}
+.acTimelineItem:last-child { border-bottom: 0; }
+.acTimelineItem i {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e7f4f3;
+  color: #0d7f74;
+  font-style: normal;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.acTimelineItem b { display: block; font-size: 12px; }
+.acTimelineItem small { display: block; font-size: 10px; color: #6b8082; margin-top: 2px; }
