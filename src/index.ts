@@ -64,6 +64,7 @@ interface User {
   login_at: number;
   user_code: string;
   status: string;
+  permissions: string;
 }
 
 interface AuthUser {
@@ -516,6 +517,8 @@ async function handleUsersList(request: Request, env: Env) {
   const role = url.searchParams.get('role');
   const status = url.searchParams.get('status');
   const q = url.searchParams.get('q') || '';
+  const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
+  const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get('pageSize')) || 20));
 
   const conditions: string[] = [];
   const bindings: string[] = [];
@@ -534,17 +537,28 @@ async function handleUsersList(request: Request, env: Env) {
   }
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
+  const countRow = await env.DB
+    .prepare(`SELECT COUNT(*) AS total FROM users ${where}`)
+    .bind(...bindings)
+    .first<{ total: number }>();
+
   const result = await env.DB
     .prepare(
-      `SELECT email, name, phone, role, plan, avatar, created_at, login_at, user_code, status,
-              (SELECT COUNT(*) FROM user_progress p WHERE p.email = users.email) AS completed_lessons
+      `SELECT email, name, phone, role, plan, avatar, created_at, login_at, user_code, status, permissions,
+              (SELECT COUNT(*) FROM user_progress p WHERE p.email = users.email) AS completed_lessons,
+              (SELECT COUNT(*) FROM student_staff_assignments a WHERE a.student_email = users.email AND a.status = 'active') AS assigned_staff_count,
+              (SELECT COUNT(*) FROM student_staff_assignments a WHERE a.staff_email = users.email AND a.status = 'active') AS assigned_student_count,
+              (SELECT COUNT(*) FROM submissions s WHERE s.status = 'pending' AND s.student_email IN (
+                SELECT student_email FROM student_staff_assignments a2 WHERE a2.staff_email = users.email AND a2.status = 'active'
+              )) AS pending_grading_count
        FROM users ${where}
-       ORDER BY created_at DESC`
+       ORDER BY created_at DESC
+       LIMIT ? OFFSET ?`
     )
-    .bind(...bindings)
+    .bind(...bindings, pageSize, (page - 1) * pageSize)
     .all<User & { completed_lessons: number }>();
 
-  return json(result.results);
+  return json({ items: result.results, total: countRow?.total || 0, page, pageSize });
 }
 
 async function handleUserGet(request: Request, env: Env, email: string) {
@@ -592,6 +606,54 @@ async function handleUserUpdate(request: Request, env: Env, email: string) {
     .run();
 
   return json({ ok: true });
+}
+
+async function handleUserPermissionsUpdate(request: Request, env: Env, email: string) {
+  requireAdmin(request, env);
+  const e = email.toLowerCase();
+  const body = await getJsonBody<{ permissions: string[] }>(request);
+  const permissions = Array.isArray(body.permissions) ? body.permissions : [];
+
+  await env.DB
+    .prepare('UPDATE users SET permissions = ? WHERE email = ?')
+    .bind(JSON.stringify(permissions), e)
+    .run();
+
+  return json({ ok: true, permissions });
+}
+
+function generateTempPassword(): string {
+  return Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 6).toUpperCase();
+}
+
+async function handleAdminCreateUser(request: Request, env: Env) {
+  requireAdmin(request, env);
+  const body = await getJsonBody<{ name: string; email: string; phone: string; role: string }>(request);
+  const e = (body.email || '').toLowerCase().trim();
+  if (!e) return error('Email bắt buộc', 400);
+  if (!['student', 'admin'].includes(body.role)) return error('Vai trò không hợp lệ', 400);
+
+  const existing = await env.DB.prepare('SELECT email FROM users WHERE email = ?').bind(e).first();
+  if (existing) return error('Email đã tồn tại', 409);
+
+  const tempPassword = generateTempPassword();
+  const password_hash = hashPassword(tempPassword, env.JWT_SECRET);
+  const joinDdmmyyyy = new Intl.DateTimeFormat('en-GB').format(new Date()).replace(/\//g, '');
+  const codeSuffix = createHmac('sha256', env.JWT_SECRET).update(e).digest('hex').slice(0, 4).toUpperCase();
+  const userCode = `${body.role === 'admin' ? 'NV' : 'MC'}-${joinDdmmyyyy}-${codeSuffix}`;
+  const plan = body.role === 'admin' ? 'pro' : 'starter';
+
+  await env.DB
+    .prepare(
+      `INSERT INTO users (email, name, phone, role, plan, password_hash, user_code, status, created_at, login_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', datetime('now', 'localtime'), 0)`
+    )
+    .bind(e, body.name || e.split('@')[0], body.phone || '', body.role, plan, password_hash, userCode)
+    .run();
+
+  await env.DB.prepare('INSERT INTO user_access (email, plan) VALUES (?, ?)').bind(e, plan).run();
+
+  return json({ ok: true, email: e, userCode, tempPassword });
 }
 
 // ─── Access Routes ─────────────────────────────────────────
@@ -765,6 +827,152 @@ async function handleQaUpdate(request: Request, env: Env, lessonId: string) {
   return json({ ok: true });
 }
 
+// ─── Assignments Routes (student ↔ staff) ────────────────────
+
+async function handleAssignmentsList(request: Request, env: Env) {
+  requireAdmin(request, env);
+  const url = new URL(request.url);
+  const student = url.searchParams.get('student');
+  const staff = url.searchParams.get('staff');
+
+  const conditions: string[] = ["a.status = 'active'"];
+  const bindings: string[] = [];
+  if (student) { conditions.push('a.student_email = ?'); bindings.push(student.toLowerCase()); }
+  if (staff) { conditions.push('a.staff_email = ?'); bindings.push(staff.toLowerCase()); }
+
+  const result = await env.DB
+    .prepare(
+      `SELECT a.id, a.student_email, a.staff_email, a.assigned_at,
+              su.name AS student_name, st.name AS staff_name
+       FROM student_staff_assignments a
+       LEFT JOIN users su ON su.email = a.student_email
+       LEFT JOIN users st ON st.email = a.staff_email
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY a.assigned_at DESC`
+    )
+    .bind(...bindings)
+    .all();
+
+  return json(result.results);
+}
+
+async function handleAssignmentCreate(request: Request, env: Env) {
+  requireAdmin(request, env);
+  const body = await getJsonBody<{ studentEmail: string; staffEmail: string }>(request);
+  const studentEmail = (body.studentEmail || '').toLowerCase();
+  const staffEmail = (body.staffEmail || '').toLowerCase();
+  if (!studentEmail || !staffEmail) return error('Thiếu thông tin học viên hoặc nhân viên', 400);
+
+  await env.DB
+    .prepare(
+      `INSERT INTO student_staff_assignments (student_email, staff_email, status)
+       VALUES (?, ?, 'active')
+       ON CONFLICT(student_email, staff_email) DO UPDATE SET status = 'active'`
+    )
+    .bind(studentEmail, staffEmail)
+    .run();
+
+  return json({ ok: true });
+}
+
+async function handleAssignmentDelete(request: Request, env: Env, id: string) {
+  requireAdmin(request, env);
+  await env.DB.prepare('DELETE FROM student_staff_assignments WHERE id = ?').bind(id).run();
+  return json({ ok: true });
+}
+
+// ─── Submissions Routes (bài tập) ─────────────────────────────
+
+async function handleSubmissionsList(request: Request, env: Env) {
+  requireAdmin(request, env);
+  const url = new URL(request.url);
+  const student = url.searchParams.get('student');
+  const staff = url.searchParams.get('staff');
+  const status = url.searchParams.get('status');
+
+  const conditions: string[] = [];
+  const bindings: string[] = [];
+  if (student) { conditions.push('s.student_email = ?'); bindings.push(student.toLowerCase()); }
+  if (status) { conditions.push('s.status = ?'); bindings.push(status); }
+  if (staff) {
+    conditions.push(`s.student_email IN (
+      SELECT student_email FROM student_staff_assignments a WHERE a.staff_email = ? AND a.status = 'active'
+    )`);
+    bindings.push(staff.toLowerCase());
+  }
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const result = await env.DB
+    .prepare(`SELECT * FROM submissions s ${where} ORDER BY s.submitted_at DESC`)
+    .bind(...bindings)
+    .all();
+
+  return json(result.results);
+}
+
+async function handleSubmissionCreate(request: Request, env: Env) {
+  const user = requireAuth(request, env);
+  const body = await getJsonBody<{ lessonId: string; content: string }>(request);
+  if (!body.lessonId) return error('Thiếu bài học', 400);
+
+  await env.DB
+    .prepare('INSERT INTO submissions (student_email, lesson_id, content) VALUES (?, ?, ?)')
+    .bind(user.email, body.lessonId, body.content || '')
+    .run();
+
+  return json({ ok: true });
+}
+
+async function handleSubmissionGrade(request: Request, env: Env, id: string) {
+  const admin = requireAdmin(request, env);
+  const body = await getJsonBody<{ grade: string; feedback: string }>(request);
+
+  await env.DB
+    .prepare(
+      `UPDATE submissions SET grade = ?, feedback = ?, status = 'graded', graded_by = ?, graded_at = datetime('now','localtime')
+       WHERE id = ?`
+    )
+    .bind(body.grade || '', body.feedback || '', admin.email, id)
+    .run();
+
+  return json({ ok: true });
+}
+
+// ─── Care Notes Routes (chăm sóc học viên) ────────────────────
+
+async function handleCareNotesList(request: Request, env: Env) {
+  requireAdmin(request, env);
+  const url = new URL(request.url);
+  const student = url.searchParams.get('student');
+  if (!student) return error('Thiếu email học viên', 400);
+
+  const result = await env.DB
+    .prepare(
+      `SELECT c.*, u.name AS staff_name FROM care_notes c
+       LEFT JOIN users u ON u.email = c.staff_email
+       WHERE c.student_email = ? ORDER BY c.created_at DESC`
+    )
+    .bind(student.toLowerCase())
+    .all();
+
+  return json(result.results);
+}
+
+async function handleCareNoteCreate(request: Request, env: Env) {
+  const staff = requireAdmin(request, env);
+  const body = await getJsonBody<{ studentEmail: string; type: string; content: string }>(request);
+  const studentEmail = (body.studentEmail || '').toLowerCase();
+  if (!studentEmail || !body.content) return error('Thiếu thông tin', 400);
+  const type = ['call', 'chat', 'note'].includes(body.type) ? body.type : 'note';
+
+  await env.DB
+    .prepare('INSERT INTO care_notes (student_email, staff_email, type, content) VALUES (?, ?, ?, ?)')
+    .bind(studentEmail, staff.email, type, body.content)
+    .run();
+
+  return json({ ok: true });
+}
+
 // ─── AI Chat ─────────────────────────────────────────────────
 
 const AI_CHAT_SYSTEM_PROMPT = `Bạn là "Trợ giảng AI" của Masterclass VN — học viện đào tạo kinh doanh và phát triển bản thân của giảng viên Nguyễn Ngọc Giàu. Trả lời ngắn gọn (tối đa 4-5 câu), thân thiện, xưng "tôi" và gọi người hỏi là "bạn". Tập trung hỗ trợ các chủ đề: kinh doanh thực chiến, xây kênh nội dung/video, phát triển bản thân. Nếu câu hỏi ngoài phạm vi khóa học, khéo léo hướng học viên quay lại nội dung khóa học hoặc đề nghị đặt câu hỏi cho giảng viên.`;
@@ -862,6 +1070,12 @@ export default {
 
       // ── Users ──
       if (path === 'users' && method === 'GET') return handleUsersList(request, env);
+      if (path === 'admin/create-user' && method === 'POST') return handleAdminCreateUser(request, env);
+
+      const permissionsMatch = path.match(/^users\/(.+)\/permissions$/);
+      if (permissionsMatch && method === 'PUT') {
+        return handleUserPermissionsUpdate(request, env, permissionsMatch[1]);
+      }
 
       const userMatch = path.match(/^users\/(.+)$/);
       if (userMatch) {
@@ -869,6 +1083,22 @@ export default {
         if (method === 'GET') return handleUserGet(request, env, e);
         if (method === 'PUT') return handleUserUpdate(request, env, e);
       }
+
+      // ── Assignments (student ↔ staff) ──
+      if (path === 'assignments' && method === 'GET') return handleAssignmentsList(request, env);
+      if (path === 'assignments' && method === 'POST') return handleAssignmentCreate(request, env);
+      const assignmentMatch = path.match(/^assignments\/(.+)$/);
+      if (assignmentMatch && method === 'DELETE') return handleAssignmentDelete(request, env, assignmentMatch[1]);
+
+      // ── Submissions (bài tập) ──
+      if (path === 'submissions' && method === 'GET') return handleSubmissionsList(request, env);
+      if (path === 'submissions' && method === 'POST') return handleSubmissionCreate(request, env);
+      const submissionMatch = path.match(/^submissions\/(.+)$/);
+      if (submissionMatch && method === 'PUT') return handleSubmissionGrade(request, env, submissionMatch[1]);
+
+      // ── Care Notes (chăm sóc học viên) ──
+      if (path === 'care-notes' && method === 'GET') return handleCareNotesList(request, env);
+      if (path === 'care-notes' && method === 'POST') return handleCareNoteCreate(request, env);
 
       // ── Access ──
       const accessMatch = path.match(/^access\/(.+)$/);

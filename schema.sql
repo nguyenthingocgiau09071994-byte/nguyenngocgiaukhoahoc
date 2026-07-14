@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
     login_at INTEGER DEFAULT 0,
     password_hash TEXT NOT NULL DEFAULT '',
     user_code TEXT,
-    status TEXT DEFAULT 'active' CHECK(status IN ('active', 'inactive'))
+    status TEXT DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
+    permissions TEXT DEFAULT '[]'
 );
 
 -- ============================================================
@@ -116,6 +117,51 @@ CREATE TABLE IF NOT EXISTS password_resets (
     expires_at INTEGER NOT NULL,
     created_at TEXT DEFAULT (datetime('now', 'localtime')),
     FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
+);
+
+-- ============================================================
+-- 6c. STUDENT_STAFF_ASSIGNMENTS — Nhân viên phụ trách học viên
+-- ============================================================
+CREATE TABLE IF NOT EXISTS student_staff_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_email TEXT NOT NULL,
+    staff_email TEXT NOT NULL,
+    assigned_at TEXT DEFAULT (datetime('now', 'localtime')),
+    status TEXT DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
+    UNIQUE(student_email, staff_email),
+    FOREIGN KEY (student_email) REFERENCES users(email) ON DELETE CASCADE,
+    FOREIGN KEY (staff_email) REFERENCES users(email) ON DELETE CASCADE
+);
+
+-- ============================================================
+-- 6d. SUBMISSIONS — Bài tập học viên nộp
+-- ============================================================
+CREATE TABLE IF NOT EXISTS submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_email TEXT NOT NULL,
+    lesson_id TEXT NOT NULL,
+    content TEXT DEFAULT '',
+    status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'graded')),
+    grade TEXT DEFAULT '',
+    feedback TEXT DEFAULT '',
+    graded_by TEXT DEFAULT '',
+    submitted_at TEXT DEFAULT (datetime('now', 'localtime')),
+    graded_at TEXT,
+    FOREIGN KEY (student_email) REFERENCES users(email) ON DELETE CASCADE
+);
+
+-- ============================================================
+-- 6e. CARE_NOTES — Lịch sử chăm sóc học viên
+-- ============================================================
+CREATE TABLE IF NOT EXISTS care_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_email TEXT NOT NULL,
+    staff_email TEXT NOT NULL,
+    type TEXT DEFAULT 'note' CHECK(type IN ('call', 'chat', 'note')),
+    content TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now', 'localtime')),
+    FOREIGN KEY (student_email) REFERENCES users(email) ON DELETE CASCADE,
+    FOREIGN KEY (staff_email) REFERENCES users(email) ON DELETE CASCADE
 );
 
 -- ============================================================
