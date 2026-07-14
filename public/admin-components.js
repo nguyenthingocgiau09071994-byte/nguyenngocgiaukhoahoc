@@ -127,3 +127,25 @@ function renderPermissionMatrix(permissions, granted) {
     `<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:400;"><input type="checkbox" data-perm="${p.key}" ${granted.includes(p.key) ? 'checked' : ''} style="width:auto;margin:0;"> ${escHtml(p.label)}</label>`
   ).join('');
 }
+
+// Tiêu đề trang chuẩn: nhãn nhỏ (eyebrow) + tiêu đề + khu vực thao tác (nút thêm, tìm kiếm...).
+// Giữ đúng cấu trúc .adminTitle đang dùng trong admin.html để không đổi CSS/layout hiện có.
+function renderPageHeader(opts) {
+  opts = opts || {};
+  return `<div class="adminTitle">
+    <div><span>${escHtml(opts.eyebrow || '')}</span><h2>${escHtml(opts.title || '')}</h2>${opts.description ? `<p>${escHtml(opts.description)}</p>` : ''}</div>
+    ${opts.actionsHtml || ''}
+  </div>`;
+}
+
+// Bảng dữ liệu dùng chung: chỉ chuẩn hóa khung bảng (header + khu vực chứa hàng),
+// vẫn dùng lại các hàm render hàng riêng của từng trang (studentRowHtml, staffRowHtml...)
+// thay vì áp đặt 1 cấu trúc cột chung — tránh viết lại logic hàng đang chạy ổn.
+function renderDataTable(opts) {
+  opts = opts || {};
+  const headCells = (opts.columns || []).map(c => `<span>${escHtml(c)}</span>`).join('');
+  return `<div class="${opts.tableClass || 'memberTable'}">
+    <div class="${opts.rowClass || 'memberRow'} ${opts.headClass || 'memberHead'}">${headCells}</div>
+    <div id="${opts.bodyId}">${opts.bodyHtml || ''}</div>
+  </div>`;
+}
